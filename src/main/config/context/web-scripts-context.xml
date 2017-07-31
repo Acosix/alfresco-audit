@@ -26,13 +26,13 @@
         <property name="personService" ref="PersonService" />
         <property name="searchService" ref="SearchService" />
         <property name="auditService" ref="AuditService" />
-        <property name="lookBackMode" value="${acosix.audit.web.script.activeUser.defaultLookBackMode}" />
-        <property name="lookBackDays" value="${acosix.audit.web.script.activeUser.defaultLookBackDays}" />
-        <property name="lookBackMonths" value="${acosix.audit.web.script.activeUser.defaultLookBackMonths}" />
-        <property name="lookBackYears" value="${acosix.audit.web.script.activeUser.defaultLookBackYears}" />
-        <property name="workerThreads" value="${acosix.audit.web.script.activeUser.defaultWorkerThreads}" />
-        <property name="batchSize" value="${acosix.audit.web.script.activeUser.defaultBatchSize}" />
-        <property name="loggingInterval" value="${acosix.audit.web.script.activeUser.defaultLoggingInterval}" />
+        <property name="lookBackMode" value="\${${moduleId}.web.script.activeUser.defaultLookBackMode}" />
+        <property name="lookBackDays" value="\${${moduleId}.web.script.activeUser.defaultLookBackDays}" />
+        <property name="lookBackMonths" value="\${${moduleId}.web.script.activeUser.defaultLookBackMonths}" />
+        <property name="lookBackYears" value="\${${moduleId}.web.script.activeUser.defaultLookBackYears}" />
+        <property name="workerThreads" value="\${${moduleId}.web.script.activeUser.defaultWorkerThreads}" />
+        <property name="batchSize" value="\${${moduleId}.web.script.activeUser.defaultBatchSize}" />
+        <property name="loggingInterval" value="\${${moduleId}.web.script.activeUser.defaultLoggingInterval}" />
     </bean>
 
     <bean id="webscript.de.acosix.acosix-audit.activeUsers.get" parent="abstract.webscript.de.acosix.acosix-audit.users">

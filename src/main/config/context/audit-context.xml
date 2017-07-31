@@ -1,0 +1,122 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- 
+ Copyright 2017 Acosix GmbH
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ -->
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+    <bean id="${moduleId}.AuthenticationAuditingListener" class="${project.artifactId}.web.auth.AuthenticationAuditingListener">
+        <property name="auditComponent" ref="auditComponent" />
+    </bean>
+
+    <bean class="${acosix.utility.common.package}.spring.PropertyAlteringBeanDefinitionRegistryPostProcessor">
+        <property name="dependsOn">
+            <list>
+                <ref bean="acosix-utility.globalAuthenticationListener.listenersPatch" />
+            </list>
+        </property>
+        <property name="enabledPropertyKeys">
+            <list>
+                <value>acosix-utility.web.auth.multipleAuthenticationListeners.enabled</value>
+                <value>${moduleId}.auth.listener.enabled</value>
+            </list>
+        </property>
+        <property name="propertiesSource" ref="global-properties" />
+        <property name="targetBeanName" value="globalAuthenticationListener" />
+        <property name="expectedClassName" value="${acosix.utility.repo.package}.web.auth.AuthenticationListenersFacade" />
+        <property name="propertyName" value="authenticationListeners" />
+        <property name="beanReferenceNameList">
+            <list>
+                <idref bean="${moduleId}.AuthenticationAuditingListener" />
+            </list>
+        </property>
+        <property name="merge" value="true" />
+    </bean>
+
+    <bean class="${acosix.utility.common.package}.spring.PropertyAlteringBeanDefinitionRegistryPostProcessor">
+        <property name="dependsOn">
+            <list>
+                <ref bean="acosix-utility.webDavAuthenticationListener.listenersPatch" />
+            </list>
+        </property>
+        <property name="enabledPropertyKeys">
+            <list>
+                <value>acosix-utility.web.auth.multipleAuthenticationListeners.enabled</value>
+                <value>${moduleId}.auth.listener.enabled</value>
+            </list>
+        </property>
+        <property name="propertiesSource" ref="global-properties" />
+        <property name="targetBeanName" value="webDavAuthenticationListener" />
+        <property name="expectedClassName" value="${acosix.utility.repo.package}.web.auth.AuthenticationListenersFacade" />
+        <property name="propertyName" value="authenticationListeners" />
+        <property name="beanReferenceNameList">
+            <list>
+                <idref bean="${moduleId}.AuthenticationAuditingListener" />
+            </list>
+        </property>
+        <property name="merge" value="true" />
+    </bean>
+
+    <bean class="${acosix.utility.common.package}.spring.PropertyAlteringBeanDefinitionRegistryPostProcessor">
+        <property name="dependsOn">
+            <list>
+                <ref bean="acosix-utility.sharepointAuthenticationListener.listenersPatch" />
+            </list>
+        </property>
+        <property name="enabledPropertyKeys">
+            <list>
+                <value>acosix-utility.web.auth.multipleAuthenticationListeners.enabled</value>
+                <value>${moduleId}.auth.listener.enabled</value>
+            </list>
+        </property>
+        <property name="propertiesSource" ref="global-properties" />
+        <property name="targetBeanName" value="sharepointAuthenticationListener" />
+        <property name="expectedClassName" value="${acosix.utility.repo.package}.web.auth.AuthenticationListenersFacade" />
+        <property name="propertyName" value="authenticationListeners" />
+        <property name="beanReferenceNameList">
+            <list>
+                <idref bean="${moduleId}.AuthenticationAuditingListener" />
+            </list>
+        </property>
+        <property name="merge" value="true" />
+    </bean>
+
+    <bean class="${acosix.utility.common.package}.spring.PropertyAlteringBeanDefinitionRegistryPostProcessor">
+        <property name="dependsOn">
+            <list>
+                <ref bean="acosix-utility.webScriptAuthenticationListener.listenersPatch" />
+            </list>
+        </property>
+        <property name="enabledPropertyKeys">
+            <list>
+                <value>acosix-utility.web.auth.multipleAuthenticationListeners.enabled</value>
+                <value>${moduleId}.auth.listener.enabled</value>
+            </list>
+        </property>
+        <property name="propertiesSource" ref="global-properties" />
+        <property name="targetBeanName" value="webScriptAuthenticationListener" />
+        <property name="expectedClassName" value="${acosix.utility.repo.package}.web.auth.AuthenticationListenersFacade" />
+        <property name="propertyName" value="authenticationListeners" />
+        <property name="beanReferenceNameList">
+            <list>
+                <idref bean="${moduleId}.AuthenticationAuditingListener" />
+            </list>
+        </property>
+        <property name="merge" value="true" />
+    </bean>
+
+</beans>

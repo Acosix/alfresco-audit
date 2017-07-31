@@ -21,7 +21,9 @@
 
     <import resource="classpath:alfresco/module/${moduleId}/context/bootstrap-context.xml" />
     <import resource="classpath:alfresco/module/${moduleId}/context/service-context.xml" />
+    <import resource="classpath:alfresco/module/${moduleId}/context/audit-context.xml" />
     <import resource="classpath:alfresco/module/${moduleId}/context/behaviour-context.xml" />
+    <import resource="classpath:alfresco/module/${moduleId}/context/job-context.xml" />
     <import resource="classpath:alfresco/module/${moduleId}/context/web-scripts-context.xml" />
 
 </beans>

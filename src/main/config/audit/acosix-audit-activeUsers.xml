@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Audit xmlns="http://www.alfresco.org/repo/audit/model/3.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.alfresco.org/repo/audit/model/3.2 alfresco-audit-3.2.xsd">
+
+    <DataExtractors>
+        <DataExtractor name="simpleValue" registeredName="auditModel.extractor.simpleValue" />
+    </DataExtractors>
+
+    <PathMappings>
+        <!-- We only record successful logins -->
+        <PathMap source="/acosix-audit/AuthenticationAuditingListener/authentication/userName" target="/acosix-audit-activeUserLogin/userName" />
+        <PathMap source="/acosix-audit/AuthenticationAuditingListener/authentication/credentialsType" target="/acosix-audit-activeUserLogin/credentialsType" />
+        <PathMap source="/alfresco-api/post/AuthenticationService/authenticate/args/userName" target="/acosix-audit-activeUserLogin/userName" />
+        
+        <PathMap source="/acosix-audit/ConsolidateActiveUsersAuditJob" target="/acosix-audit-activeUsers" />
+    </PathMappings>
+
+    <Application name="acosix-audit-activeUserLogin" key="acosix-audit-activeUserLogin">
+        <RecordValue key="userName" dataExtractor="simpleValue" dataSource="/acosix-audit-activeUserLogin/userName" dataTrigger="/acosix-audit-activeUserLogin/userName" />
+        <RecordValue key="credentialsType" dataExtractor="simpleValue" dataSource="/acosix-audit-activeUserLogin/credentialsType"
+            dataTrigger="/acosix-audit-activeUserLogin/credentialsType" />
+    </Application>
+
+    <!-- audit application records users active within a specific reporting time frame (consolidated from other audit data to reduce amount of data; loss of precision is by design) -->
+    <Application name="acosix-audit-activeUsers" key="acosix-audit-activeUsers">
+        <RecordValue key="userName" dataExtractor="simpleValue" dataSource="/acosix-audit-activeUsers/userName" dataTrigger="/acosix-audit-activeUsers/userName" />
+        <RecordValue key="timeframeStart" dataExtractor="simpleValue" dataSource="/acosix-audit-activeUsers/timeframeStart" dataTrigger="/acosix-audit-activeUsers/timeframeStart" />
+        <RecordValue key="timeframeEnd" dataExtractor="simpleValue" dataSource="/acosix-audit-activeUsers/timeframeEnd" dataTrigger="/acosix-audit-activeUsers/timeframeEnd" />
+    </Application>
+</Audit>
