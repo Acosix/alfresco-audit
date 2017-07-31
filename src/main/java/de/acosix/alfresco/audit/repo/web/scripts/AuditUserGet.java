@@ -17,23 +17,18 @@ package de.acosix.alfresco.audit.repo.web.scripts;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.alfresco.model.ContentModel;
-import org.alfresco.repo.batch.BatchProcessWorkProvider;
 import org.alfresco.repo.batch.BatchProcessor;
 import org.alfresco.repo.batch.BatchProcessor.BatchProcessWorkerAdaptor;
 import org.alfresco.repo.security.authentication.AuthenticationUtil;
@@ -42,11 +37,7 @@ import org.alfresco.service.cmr.audit.AuditService;
 import org.alfresco.service.cmr.audit.AuditService.AuditQueryCallback;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.repository.NodeService;
-import org.alfresco.service.cmr.repository.StoreRef;
 import org.alfresco.service.cmr.repository.datatype.DefaultTypeConverter;
-import org.alfresco.service.cmr.search.LimitBy;
-import org.alfresco.service.cmr.search.ResultSet;
-import org.alfresco.service.cmr.search.SearchParameters;
 import org.alfresco.service.cmr.search.SearchService;
 import org.alfresco.service.cmr.security.PersonService;
 import org.alfresco.service.namespace.NamespaceService;
@@ -69,6 +60,7 @@ import org.springframework.extensions.webscripts.WebScriptException;
 import org.springframework.extensions.webscripts.WebScriptRequest;
 
 import de.acosix.alfresco.audit.repo.web.scripts.AuditUserGet.AuditUserInfo.AuthorisedState;
+import de.acosix.alfresco.utility.repo.batch.PersonBatchWorkProvider;
 
 /**
  * This web script queries active/inactive users within a specific timeframe into the past from the data of an audit application within
@@ -630,9 +622,10 @@ public class AuditUserGet extends DeclarativeWebScript implements InitializingBe
             final int loggingInterval)
     {
         final PersonAuditWorker personAuditWorker = new PersonAuditWorker(fromTime, this.queryActiveUsers);
-        final BatchProcessor<NodeRef> processor = new BatchProcessor<>("UserAuditQuery",
-                this.transactionService.getRetryingTransactionHelper(), new PersonBatchWorkProvider(), workerThreads, batchSize, null,
-                LogFactory.getLog(AuditUserGet.class), loggingInterval);
+        final BatchProcessor<NodeRef> processor = new BatchProcessor<>(AuditUserGet.class.getName(),
+                this.transactionService.getRetryingTransactionHelper(),
+                new PersonBatchWorkProvider(this.namespaceService, this.nodeService, this.personService, this.searchService), workerThreads,
+                batchSize, null, LogFactory.getLog(AuditUserGet.class), loggingInterval);
         processor.process(personAuditWorker, true);
 
         final List<AuditUserInfo> activeUsers = new ArrayList<>(personAuditWorker.getUsers());
@@ -701,6 +694,10 @@ public class AuditUserGet extends DeclarativeWebScript implements InitializingBe
                     return false;
                 }
 
+                /**
+                 *
+                 * {@inheritDoc}
+                 */
                 @Override
                 public boolean handleAuditEntry(final Long entryId, final String applicationName, final String user, final long time,
                         final Map<String, Serializable> values)
@@ -709,6 +706,10 @@ public class AuditUserGet extends DeclarativeWebScript implements InitializingBe
                     return true;
                 }
 
+                /**
+                 *
+                 * {@inheritDoc}
+                 */
                 @Override
                 public boolean handleAuditEntryError(final Long entryId, final String errorMsg, final Throwable error)
                 {
@@ -789,134 +790,6 @@ public class AuditUserGet extends DeclarativeWebScript implements InitializingBe
         public List<AuditUserInfo> getUsers()
         {
             return Collections.unmodifiableList(this.users);
-        }
-
-    }
-
-    /**
-     *
-     * @author Axel Faust, <a href="http://acosix.de">Acosix GmbH</a>
-     */
-    protected class PersonBatchWorkProvider implements BatchProcessWorkProvider<NodeRef>
-    {
-
-        private char lastMaxCharacter = '\0';
-
-        private String lastName;
-
-        private boolean done;
-
-        private boolean useCharacterUpperBound = true;
-
-        protected Set<NodeRef> retrievedNodes = new HashSet<>();
-
-        /**
-         *
-         * {@inheritDoc}
-         */
-        @Override
-        public int getTotalEstimatedWorkSize()
-        {
-            return AuditUserGet.this.personService.countPeople();
-        }
-
-        /**
-         *
-         * {@inheritDoc}
-         */
-        @Override
-        public Collection<NodeRef> getNextWork()
-        {
-            final List<NodeRef> nextWork = new ArrayList<>();
-
-            while (!this.done && nextWork.isEmpty())
-            {
-                // check the last limit character (for name-based pagination to keep DB query highly selective)
-                switch (this.lastMaxCharacter)
-                {
-                    case '\0':
-                        this.lastMaxCharacter = '0';
-                        break;
-                    case '9':
-                        this.lastMaxCharacter = 'A';
-                        break;
-                    case 'Z':
-                        this.lastMaxCharacter = 'a';
-                        break;
-                    case 'z':
-                        this.useCharacterUpperBound = false;
-                        break;
-                    default:
-                        this.lastMaxCharacter += 1;
-                }
-
-                final SearchParameters sp = new SearchParameters();
-                sp.setLanguage(SearchService.LANGUAGE_CMIS_ALFRESCO);
-                sp.addStore(StoreRef.STORE_REF_WORKSPACE_SPACESSTORE);
-                sp.addSort("@" + ContentModel.PROP_USERNAME.toPrefixString(AuditUserGet.this.namespaceService), true);
-
-                final String query;
-                if (this.useCharacterUpperBound)
-                {
-                    // query with upper bound as long as we are in a sensible ASCII range
-                    final MessageFormat mf = new MessageFormat(
-                            this.lastName != null ? "SELECT * FROM {0} P WHERE P.{1} <= ''{2}'' AND P.{1} > ''{3}''"
-                                    : "SELECT * FROM {0} P WHERE P.{1} <= ''{2}''",
-                            Locale.ENGLISH);
-                    query = mf.format(new Object[] { ContentModel.TYPE_PERSON.toPrefixString(AuditUserGet.this.namespaceService),
-                            ContentModel.PROP_USERNAME.toPrefixString(AuditUserGet.this.namespaceService),
-                            String.valueOf(this.lastMaxCharacter), this.lastName });
-                }
-                else
-                {
-                    // for user names in unicode and beyond ASCII range we can't really do name-based pagination anymore
-                    final MessageFormat mf = new MessageFormat(
-                            this.lastName != null ? "SELECT * FROM {0} P WHERE P.{1} > ''{2}''" : "SELECT * FROM {0}", Locale.ENGLISH);
-                    query = mf.format(new Object[] { ContentModel.TYPE_PERSON.toPrefixString(AuditUserGet.this.namespaceService),
-                            ContentModel.PROP_USERNAME.toPrefixString(AuditUserGet.this.namespaceService), this.lastName });
-                }
-
-                sp.setQuery(query);
-                sp.setBulkFetchEnabled(false);
-                sp.setLimitBy(LimitBy.UNLIMITED);
-                sp.setMaxItems(Integer.MAX_VALUE);
-                sp.setLimit(Integer.MAX_VALUE);
-
-                final ResultSet results = AuditUserGet.this.searchService.query(sp);
-                try
-                {
-                    nextWork.addAll(results.getNodeRefs());
-                }
-                finally
-                {
-                    results.close();
-                }
-
-                // depending on DB collation (case sensitive or insensitive) we may get duplicates when we query for lower/upper case
-                // initial characters
-                nextWork.removeAll(this.retrievedNodes);
-                this.retrievedNodes.addAll(nextWork);
-
-                // if we did a query without an upper bound we are done now
-                this.done = !this.useCharacterUpperBound;
-
-                if (!this.done)
-                {
-                    if (nextWork.isEmpty())
-                    {
-                        this.lastName = String.valueOf(this.lastMaxCharacter);
-                    }
-                    else
-                    {
-                        final NodeRef lastPerson = nextWork.get(nextWork.size() - 1);
-                        final Map<QName, Serializable> personProperties = AuditUserGet.this.nodeService.getProperties(lastPerson);
-                        this.lastName = DefaultTypeConverter.INSTANCE.convert(String.class,
-                                personProperties.get(ContentModel.PROP_USERNAME));
-                    }
-                }
-            }
-
-            return nextWork;
         }
 
     }

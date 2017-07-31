@@ -54,6 +54,10 @@
         <moduleId>acosix-audit</moduleId>
 
         <alfresco.authorised-users.version>5.0.0.2</alfresco.authorised-users.version>
+
+        <utility.version>1.0.2.0-SNAPSHOT</utility.version>
+        <acosix.utility.common.package>de.acosix.alfresco.utility.common</acosix.utility.common.package>
+        <acosix.utility.repo.package>de.acosix.alfresco.utility.repo</acosix.utility.repo.package>
     </properties>
 
     <repositories>
@@ -67,23 +71,39 @@
     </repositories>
 
     <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>de.acosix.alfresco.utility</groupId>
+                <artifactId>de.acosix.alfresco.utility.common</artifactId>
+                <version>${utility.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>de.acosix.alfresco.utility</groupId>
+                <artifactId>de.acosix.alfresco.utility.repo</artifactId>
+                <version>${utility.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>de.acosix.alfresco.utility</groupId>
+                <artifactId>de.acosix.alfresco.utility.share</artifactId>
+                <version>${utility.version}</version>
+                <scope>provided</scope>
+            </dependency>
+        </dependencies>
     </dependencyManagement>
 
     <dependencies>
         <dependency>
             <groupId>org.alfresco</groupId>
-            <artifactId>alfresco-repository</artifactId>
-            <!-- can mess with tests using a Servlet 3.0 container -->
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.servlet</groupId>
-                    <artifactId>servlet-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>alfresco-remote-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>de.acosix.alfresco.utility</groupId>
+            <artifactId>de.acosix.alfresco.utility.repo</artifactId>
         </dependency>
     </dependencies>
 
