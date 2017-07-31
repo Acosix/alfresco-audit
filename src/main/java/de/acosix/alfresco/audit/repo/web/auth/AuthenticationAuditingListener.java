@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 
-import de.acosix.alfresco.utility.repo.AuditModuleConstants;
+import de.acosix.alfresco.audit.repo.AuditModuleConstants;
 
 /**
  * This class provides the capability to audit authentication events that occur on the {@link BaseAuthenticationFilter authentication

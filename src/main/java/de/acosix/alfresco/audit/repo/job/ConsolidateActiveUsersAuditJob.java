@@ -174,21 +174,13 @@ public class ConsolidateActiveUsersAuditJob implements Job
         }
 
         /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void beforeProcess() throws Throwable
-        {
-            AuthenticationUtil.setRunAsUserSystem();
-        }
-
-        /**
          *
          * {@inheritDoc}
          */
         @Override
         public void process(final NodeRef personRef) throws Throwable
         {
+            AuthenticationUtil.setRunAsUserSystem();
             final Map<QName, Serializable> personProperties = this.nodeService.getProperties(personRef);
             final String userName = DefaultTypeConverter.INSTANCE.convert(String.class, personProperties.get(ContentModel.PROP_USERNAME));
             LOGGER.debug("Processing user {} (node {})", userName, personRef);
@@ -216,18 +208,23 @@ public class ConsolidateActiveUsersAuditJob implements Job
 
                 if (!exists)
                 {
+                    // recording should be done using the proper user name
+                    AuthenticationUtil.clearCurrentSecurityContext();
+                    AuthenticationUtil.setRunAsUser(userName);
+
+                    final String rootPath = AuditApplication.buildPath(AuditModuleConstants.AUDIT_PRODUCER_ROOT_PATH,
+                            ConsolidateActiveUsersAuditJob.class.getSimpleName());
+                    final Map<String, Serializable> auditMap = new HashMap<>();
+                    auditMap.put("userName", userName);
+                    auditMap.put("timeframeStart", timeframeStart);
+                    auditMap.put("timeframeEnd", timeframeEnd);
+
                     LOGGER.debug("Recording 'new' active user time frame {} to {}", timeframeStart, timeframeEnd);
-                    // TODO Does not yet record as the user we are processing
-                    AuthenticationUtil.runAs(() -> {
-                        final String rootPath = AuditApplication.buildPath(AuditModuleConstants.AUDIT_PRODUCER_ROOT_PATH,
-                                ConsolidateActiveUsersAuditJob.class.getSimpleName());
-                        final Map<String, Serializable> auditMap = new HashMap<>();
-                        auditMap.put("userName", userName);
-                        auditMap.put("timeframeStart", timeframeStart);
-                        auditMap.put("timeframeEnd", timeframeEnd);
-                        this.auditComponent.recordAuditValuesWithUserFilter(rootPath, auditMap, false);
-                        return null;
-                    }, userName);
+                    this.auditComponent.recordAuditValuesWithUserFilter(rootPath, auditMap, false);
+
+                    // reset for next iteration
+                    AuthenticationUtil.clearCurrentSecurityContext();
+                    AuthenticationUtil.setRunAsUserSystem();
                 }
             }
         }
@@ -235,7 +232,7 @@ public class ConsolidateActiveUsersAuditJob implements Job
         private boolean checkEntryExists(final String userName, final String timeframeStart, final String timeframeEnd)
         {
             final AuditQueryParameters aqp = new AuditQueryParameters();
-            aqp.setApplicationName(AuditModuleConstants.AUDIT_ACTIVE_USER_LOGIN_APP_NAME);
+            aqp.setApplicationName(AuditModuleConstants.AUDIT_ACTIVE_USERS_APP_NAME);
             aqp.setForward(true);
             aqp.setUser(userName);
             aqp.addSearchKey(AuditModuleConstants.AUDIT_ACTIVE_USERS_TIMEFRAME_START_KEY, timeframeStart);
