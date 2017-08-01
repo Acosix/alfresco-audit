@@ -326,6 +326,19 @@ public class AuditUserGet extends DeclarativeWebScript implements InitializingBe
 
     protected boolean queryActiveUsers = true;
 
+    protected String auditApplicationName = "alfresco-access";
+
+    // in default alfresco-access we query by directly associated user
+    protected String userAuditPath = null;
+
+    // if audit data contains a date range / time frame we need to extract semantically separate from/to values
+    protected String dateFromAuditPath = null;
+
+    protected String dateToAuditPath = null;
+
+    // simple "effective" date in audit data
+    protected String dateAuditPath = null;
+
     /**
      * {@inheritDoc}
      */
@@ -524,6 +537,66 @@ public class AuditUserGet extends DeclarativeWebScript implements InitializingBe
     }
 
     /**
+     * @param auditApplicationName
+     *            the auditApplicationName to set
+     */
+    public void setAuditApplicationName(final String auditApplicationName)
+    {
+        if (auditApplicationName == null || !auditApplicationName.trim().isEmpty())
+        {
+            this.auditApplicationName = auditApplicationName;
+        }
+    }
+
+    /**
+     * @param userAuditPath
+     *            the userAuditPath to set
+     */
+    public void setUserAuditPath(final String userAuditPath)
+    {
+        if (userAuditPath == null || !userAuditPath.trim().isEmpty())
+        {
+            this.userAuditPath = userAuditPath;
+        }
+    }
+
+    /**
+     * @param dateFromAuditPath
+     *            the dateFromAuditPath to set
+     */
+    public void setDateFromAuditPath(final String dateFromAuditPath)
+    {
+        if (dateFromAuditPath == null || !dateFromAuditPath.trim().isEmpty())
+        {
+            this.dateFromAuditPath = dateFromAuditPath;
+        }
+    }
+
+    /**
+     * @param dateToAuditPath
+     *            the dateToAuditPath to set
+     */
+    public void setDateToAuditPath(final String dateToAuditPath)
+    {
+        if (dateToAuditPath == null || !dateToAuditPath.trim().isEmpty())
+        {
+            this.dateToAuditPath = dateToAuditPath;
+        }
+    }
+
+    /**
+     * @param dateAuditPath
+     *            the dateAuditPath to set
+     */
+    public void setDateAuditPath(final String dateAuditPath)
+    {
+        if (dateAuditPath == null || !dateAuditPath.trim().isEmpty())
+        {
+            this.dateAuditPath = dateAuditPath;
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -671,16 +744,26 @@ public class AuditUserGet extends DeclarativeWebScript implements InitializingBe
             final Map<QName, Serializable> personProperties = AuditUserGet.this.nodeService.getProperties(personRef);
             final String userName = DefaultTypeConverter.INSTANCE.convert(String.class, personProperties.get(ContentModel.PROP_USERNAME));
 
-            // TODO generalise to use alternative audit applications and optional search keys
             final AuditQueryParameters aqp = new AuditQueryParameters();
-            aqp.setApplicationName("alfresco-access");
+            aqp.setApplicationName(AuditUserGet.this.auditApplicationName);
 
             aqp.setForward(true);
-            aqp.setUser(userName);
+            if (AuditUserGet.this.userAuditPath != null)
+            {
+                aqp.addSearchKey(AuditUserGet.this.userAuditPath, userName);
+            }
+            else
+            {
+                aqp.setUser(userName);
+            }
             aqp.setFromTime(this.fromTime);
 
             final AtomicLong firstActive = new AtomicLong(-1);
             final AtomicLong lastActive = new AtomicLong(-1);
+
+            final boolean useDateValuesFromAuditData = AuditUserGet.this.dateFromAuditPath != null
+                    || AuditUserGet.this.dateToAuditPath != null || AuditUserGet.this.dateAuditPath != null;
+
             AuditUserGet.this.auditService.auditQuery(new AuditQueryCallback()
             {
 
@@ -691,7 +774,7 @@ public class AuditUserGet extends DeclarativeWebScript implements InitializingBe
                 @Override
                 public boolean valuesRequired()
                 {
-                    return false;
+                    return useDateValuesFromAuditData;
                 }
 
                 /**
@@ -702,7 +785,43 @@ public class AuditUserGet extends DeclarativeWebScript implements InitializingBe
                 public boolean handleAuditEntry(final Long entryId, final String applicationName, final String user, final long time,
                         final Map<String, Serializable> values)
                 {
-                    firstActive.set(time);
+                    Long effectiveFirstTime;
+                    final Long effectiveLastTime;
+
+                    if (AuditUserGet.this.dateAuditPath != null)
+                    {
+                        // implicitly handles ISO8601 text values
+                        final Date dateValue = DefaultTypeConverter.INSTANCE.convert(Date.class,
+                                values.get(AuditUserGet.this.dateAuditPath));
+                        effectiveFirstTime = Long.valueOf(dateValue.getTime());
+                        effectiveLastTime = effectiveFirstTime;
+                    }
+                    else if (AuditUserGet.this.dateFromAuditPath != null && AuditUserGet.this.dateToAuditPath != null)
+                    {
+                        // implicitly handles ISO8601 text values
+                        final Date dateFromValue = DefaultTypeConverter.INSTANCE.convert(Date.class,
+                                values.get(AuditUserGet.this.dateFromAuditPath));
+                        final Date dateToValue = DefaultTypeConverter.INSTANCE.convert(Date.class,
+                                values.get(AuditUserGet.this.dateToAuditPath));
+                        effectiveFirstTime = Long.valueOf(dateFromValue.getTime());
+                        effectiveLastTime = Long.valueOf(dateToValue.getTime());
+                    }
+                    else
+                    {
+                        effectiveFirstTime = time;
+                        effectiveLastTime = time;
+                    }
+
+                    if (firstActive.get() == -1 || firstActive.get() > effectiveFirstTime.longValue())
+                    {
+                        firstActive.set(effectiveFirstTime.longValue());
+                    }
+
+                    if (lastActive.get() == -1 || lastActive.get() < effectiveLastTime.longValue())
+                    {
+                        lastActive.set(effectiveLastTime.longValue());
+                    }
+
                     return true;
                 }
 
@@ -716,37 +835,42 @@ public class AuditUserGet extends DeclarativeWebScript implements InitializingBe
                     return true;
                 }
 
-            }, aqp, 1);
+            }, aqp, useDateValuesFromAuditData ? Integer.MAX_VALUE : 1);
+            // we cannot rely on date-based ordering to retrieve firstActive only by looking at first entry
 
-            aqp.setForward(false);
-            AuditUserGet.this.auditService.auditQuery(new AuditQueryCallback()
+            // and only if we can rely on date-based ordering is it appropriate to only look at last entry for lastActive
+            if (!useDateValuesFromAuditData)
             {
-
-                /**
-                 *
-                 * {@inheritDoc}
-                 */
-                @Override
-                public boolean valuesRequired()
+                aqp.setForward(false);
+                AuditUserGet.this.auditService.auditQuery(new AuditQueryCallback()
                 {
-                    return false;
-                }
 
-                @Override
-                public boolean handleAuditEntry(final Long entryId, final String applicationName, final String user, final long time,
-                        final Map<String, Serializable> values)
-                {
-                    lastActive.set(time);
-                    return true;
-                }
+                    /**
+                     *
+                     * {@inheritDoc}
+                     */
+                    @Override
+                    public boolean valuesRequired()
+                    {
+                        return false;
+                    }
 
-                @Override
-                public boolean handleAuditEntryError(final Long entryId, final String errorMsg, final Throwable error)
-                {
-                    return true;
-                }
+                    @Override
+                    public boolean handleAuditEntry(final Long entryId, final String applicationName, final String user, final long time,
+                            final Map<String, Serializable> values)
+                    {
+                        lastActive.set(time);
+                        return true;
+                    }
 
-            }, aqp, 1);
+                    @Override
+                    public boolean handleAuditEntryError(final Long entryId, final String errorMsg, final Throwable error)
+                    {
+                        return true;
+                    }
+
+                }, aqp, 1);
+            }
 
             final AuthorisedState authorisedState;
             if (AuditUserGet.this.isAuthorizedHandle != null && AuditUserGet.this.isDeauthorizedHandle != null)

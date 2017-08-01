@@ -44,5 +44,47 @@
         <property name="scheduler" ref="schedulerFactory" />
         <property name="cronExpression" value="\${${moduleId}.job.consolidateActiveUsersAudit.cron}" />
     </bean>
+    
+    <bean id="${moduleId}.activeUserLoginCleanupJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="${project.artifactId}.job.AuditApplicationCleanupJob" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="transactionService" value-ref="TransactionService" />
+                <entry key="jobLockService" value-ref="JobLockService" />
+                <entry key="auditService" value-ref="AuditService" />
+                
+                <entry key="auditApplicationName" value="acosix-audit-activeUserLogin" />
+                <entry key="cutOffPeriod" value="\${${moduleId}.job.activeUserLoginCleanup.cutOffPeriod}" />
+                <entry key="timezone" value="\${${moduleId}.job.activeUserLoginCleanup.timezone}" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="${moduleId}.activeUserLoginCleanupJobTrigger" class="org.alfresco.util.CronTriggerBean">
+        <property name="jobDetail" ref="${moduleId}.activeUserLoginCleanupJob" />
+        <property name="scheduler" ref="schedulerFactory" />
+        <property name="cronExpression" value="\${${moduleId}.job.activeUserLoginCleanup.cron}" />
+    </bean>
+    
+    <bean id="${moduleId}.activeUsersCleanupJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="${project.artifactId}.job.AuditApplicationCleanupJob" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="transactionService" value-ref="TransactionService" />
+                <entry key="jobLockService" value-ref="JobLockService" />
+                <entry key="auditService" value-ref="AuditService" />
+                
+                <entry key="auditApplicationName" value="acosix-audit-activeUsers" />
+                <entry key="cutOffPeriod" value="\${${moduleId}.job.activeUsersCleanup.cutOffPeriod}" />
+                <entry key="timezone" value="\${${moduleId}.job.activeUsersCleanup.timezone}" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="${moduleId}.activeUsersCleanupJobTrigger" class="org.alfresco.util.CronTriggerBean">
+        <property name="jobDetail" ref="${moduleId}.activeUsersCleanupJob" />
+        <property name="scheduler" ref="schedulerFactory" />
+        <property name="cronExpression" value="\${${moduleId}.job.activeUsersCleanup.cron}" />
+    </bean>
 
 </beans>

@@ -33,6 +33,12 @@
         <property name="workerThreads" value="\${${moduleId}.web.script.activeUser.defaultWorkerThreads}" />
         <property name="batchSize" value="\${${moduleId}.web.script.activeUser.defaultBatchSize}" />
         <property name="loggingInterval" value="\${${moduleId}.web.script.activeUser.defaultLoggingInterval}" />
+        
+        <property name="auditApplicationName" value="\${${moduleId}.web.script.activeUser.auditApplicationName}" />
+        <property name="userAuditPath" value="\${${moduleId}.web.script.activeUser.userAuditPath}" />
+        <property name="dateFromAuditPath" value="\${${moduleId}.web.script.activeUser.dateFromAuditPath}" />
+        <property name="dateToAuditPath" value="\${${moduleId}.web.script.activeUser.dateToAuditPath}" />
+        <property name="dateAuditPath" value="\${${moduleId}.web.script.activeUser.dateAuditPath}" />
     </bean>
 
     <bean id="webscript.de.acosix.acosix-audit.activeUsers.get" parent="abstract.webscript.de.acosix.acosix-audit.users">
