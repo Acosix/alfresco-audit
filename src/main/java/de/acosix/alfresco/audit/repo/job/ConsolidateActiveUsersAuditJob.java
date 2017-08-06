@@ -146,7 +146,8 @@ public class ConsolidateActiveUsersAuditJob implements Job
 
         final BatchProcessor<NodeRef> processor = new BatchProcessor<>(ConsolidateActiveUsersAuditJob.class.getName(),
                 retryingTransactionHelper, new PersonBatchWorkProvider(namespaceService, nodeService, personService, searchService),
-                workerThreads, batchSize, null, LogFactory.getLog(ConsolidateActiveUsersAuditJob.class), workerThreads * batchSize * 2);
+                workerThreads, batchSize, null, LogFactory.getLog(ConsolidateActiveUsersAuditJob.class.getName() + ".batchProcessor"),
+                Math.max(25, workerThreads * batchSize * 2));
 
         final PersonConsolidationAuditWorker worker = new PersonConsolidationAuditWorker(nodeService, auditService, auditComponent,
                 timeframeHours);

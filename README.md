@@ -19,6 +19,27 @@ Support for SSO and web script authenticators is dependent on custom authenticat
 
 Depending on the authentication method and frequency of HTTP calls to the Repository, quite a lot of audit entries may be created in a short duration. Entries are only kept for a limited time (14 days, defined as ISO 8601 period via _acosix-audit.job.activeUserLoginCleanup.cutOffPeriod_) and cleared at specific intervals (1 AM every day, defined as CRON via _acosix-utility.job.activeUserLoginCleanup.cron_). For long-term use the audit data is regularly consolidated (5 minutes, defined as CRON via _acosix-audit.job.consolidateActiveUsersAudit.cron_) into a separate audit application (_acosix-audit-activeUsers_). This stores the user name and the start/end of a reporting time frame (1 hour, defined as number of hours (divisors of 24) via _acosix-utility.job.consolidateActiveUsersAudit.timeframeHours_) in which the user has logged into Alfresco at least once.
 
+### Incremental cleanup of alf\_prop\_\* tables
+When Auditing entries or AttributeService entries are being deleted, Alfresco does not actually delete all of the associated data. The structures of the alf\_prop\_\* tables are designed to heavily reuse individual textual or numerical data elements, much to the point that cascade deletion upon removal of audit entries or attributes is no longer possible as the same values could be referenced in other elements.
+
+Since Alfresco 4.1.9, 4.2.2 (Enterprise) and 5.0 (Community), Alfresco includes a default job to clean up dangling data in alf\_prop\_* tables. This job is disabled via a CRON expression that is guaranteed to never run and must be re-configured to be able to run. This job is a brute-force approach to deleting dangling data - it tries to clear all entries in one single transaction. This may be inappropriate for constellations where data has accumulated over many years or the system cannot be bogged down by expensive database operations.
+
+The incremental cleanup provided by this addon is composed of multiple jobs that iteratively check sub-sets of data entries for being actively referenced. By default they are configured to run between 9 PM and 5 AM in a staggered pattern. The following jobs are part of this feature:
+
+- propertyRootsCleanup
+- propertyValuesCleanup
+- propertyStringValuesCleanup
+- propertySerializableValuesCleanup
+- propertyDoubleValuesCleanup
+
+Each job can be configured via alfresco-global.properties using the key pattern _acosix-audit.&lt;jobName&gt;.&gt;setting&lt;. The following settings are supported:
+
+- _cron_ - the CRON expression determining the time to run
+- _batchSize_ - the amount of sub-sets of entries to process in a batch
+- _workerCount_ - the number of parallel threads to process the job
+- _idsPerWorkItem_ - the size of entry sub-sets to process as an individual work item
+- _checkItemsLimit_ - the number of entries to check in one run of the job to limit the execution time / time of load on the database
+
 ### Web Scripts to query active / inactive users
 The Repository-tier web scripts at URLs _/alfresco/s/acosix/api/audit/activeUsers_ and _/alfresco/s/acosix/api/audit/inactiveUsers_ provide reports about (in)active users based on audit data. These web scripts check each user that exists as a _cm:person_ node against the audit data within a particular time frame and include them in the report when they can / cannot be associated with a single audit entry in that time frame. The web scripts utilise batch execution to avoid issues with overflowing transactional caches.
 

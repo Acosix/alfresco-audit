@@ -19,7 +19,7 @@
            http://www.springframework.org/schema/beans
            http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
-    <bean id="${moduleId}.ConsolidateActiveUsersAuditJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+    <bean id="${moduleId}-ConsolidateActiveUsersAuditJob" class="org.springframework.scheduling.quartz.JobDetailBean">
         <property name="jobClass" value="${project.artifactId}.job.ConsolidateActiveUsersAuditJob" />
         <property name="jobDataAsMap">
             <map>
@@ -31,7 +31,7 @@
                 <entry key="searchService" value-ref="SearchService" />
                 <entry key="auditService" value-ref="AuditService" />
                 <entry key="auditComponent" value-ref="auditComponent" />
-                
+
                 <entry key="workerThreads" value="\${${moduleId}.job.consolidateActiveUsersAudit.workerThreads}" />
                 <entry key="batchSize" value="\${${moduleId}.job.consolidateActiveUsersAudit.batchSize}" />
                 <entry key="timeframeHours" value="\${${moduleId}.job.consolidateActiveUsersAudit.timeframeHours}" />
@@ -39,20 +39,20 @@
         </property>
     </bean>
 
-    <bean id="${moduleId}.ConsolidateActiveUsersAuditJobTrigger" class="org.alfresco.util.CronTriggerBean">
-        <property name="jobDetail" ref="${moduleId}.ConsolidateActiveUsersAuditJob" />
+    <bean id="${moduleId}-ConsolidateActiveUsersAuditJobTrigger" class="org.alfresco.util.CronTriggerBean">
+        <property name="jobDetail" ref="${moduleId}-ConsolidateActiveUsersAuditJob" />
         <property name="scheduler" ref="schedulerFactory" />
         <property name="cronExpression" value="\${${moduleId}.job.consolidateActiveUsersAudit.cron}" />
     </bean>
-    
-    <bean id="${moduleId}.activeUserLoginCleanupJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+
+    <bean id="${moduleId}-ActiveUserLoginCleanupJob" class="org.springframework.scheduling.quartz.JobDetailBean">
         <property name="jobClass" value="${project.artifactId}.job.AuditApplicationCleanupJob" />
         <property name="jobDataAsMap">
             <map>
                 <entry key="transactionService" value-ref="TransactionService" />
                 <entry key="jobLockService" value-ref="JobLockService" />
                 <entry key="auditService" value-ref="AuditService" />
-                
+
                 <entry key="auditApplicationName" value="acosix-audit-activeUserLogin" />
                 <entry key="cutOffPeriod" value="\${${moduleId}.job.activeUserLoginCleanup.cutOffPeriod}" />
                 <entry key="timezone" value="\${${moduleId}.job.activeUserLoginCleanup.timezone}" />
@@ -60,20 +60,20 @@
         </property>
     </bean>
 
-    <bean id="${moduleId}.activeUserLoginCleanupJobTrigger" class="org.alfresco.util.CronTriggerBean">
-        <property name="jobDetail" ref="${moduleId}.activeUserLoginCleanupJob" />
+    <bean id="${moduleId}-ActiveUserLoginCleanupJobTrigger" class="org.alfresco.util.CronTriggerBean">
+        <property name="jobDetail" ref="${moduleId}-ActiveUserLoginCleanupJob" />
         <property name="scheduler" ref="schedulerFactory" />
         <property name="cronExpression" value="\${${moduleId}.job.activeUserLoginCleanup.cron}" />
     </bean>
-    
-    <bean id="${moduleId}.activeUsersCleanupJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+
+    <bean id="${moduleId}-ActiveUsersCleanupJob" class="org.springframework.scheduling.quartz.JobDetailBean">
         <property name="jobClass" value="${project.artifactId}.job.AuditApplicationCleanupJob" />
         <property name="jobDataAsMap">
             <map>
                 <entry key="transactionService" value-ref="TransactionService" />
                 <entry key="jobLockService" value-ref="JobLockService" />
                 <entry key="auditService" value-ref="AuditService" />
-                
+
                 <entry key="auditApplicationName" value="acosix-audit-activeUsers" />
                 <entry key="cutOffPeriod" value="\${${moduleId}.job.activeUsersCleanup.cutOffPeriod}" />
                 <entry key="timezone" value="\${${moduleId}.job.activeUsersCleanup.timezone}" />
@@ -81,10 +81,110 @@
         </property>
     </bean>
 
-    <bean id="${moduleId}.activeUsersCleanupJobTrigger" class="org.alfresco.util.CronTriggerBean">
-        <property name="jobDetail" ref="${moduleId}.activeUsersCleanupJob" />
+    <bean id="${moduleId}-ActiveUsersCleanupJobTrigger" class="org.alfresco.util.CronTriggerBean">
+        <property name="jobDetail" ref="${moduleId}-ActiveUsersCleanupJob" />
         <property name="scheduler" ref="schedulerFactory" />
         <property name="cronExpression" value="\${${moduleId}.job.activeUsersCleanup.cron}" />
     </bean>
 
+    <bean id="${moduleId}-IncrementalPropertyTableCleanupJob" abstract="true" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="jobLockService" value-ref="JobLockService" />
+                <entry key="transactionService" value-ref="TransactionService" />
+                <entry key="attributeService" value-ref="AttributeService" />
+                <entry key="propertyTablesCleanupDAO" value-ref="${moduleId}-PropertyTablesCleanupDAO" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="${moduleId}-PropertyRootsCleanupJob" parent="${moduleId}-IncrementalPropertyTableCleanupJob">
+        <property name="jobClass" value="${project.artifactId}.job.PropertyRootCleanupJob" />
+        <property name="jobDataAsMap">
+            <map merge="true">
+                <entry key="batchSize" value="\${${moduleId}.propertyRootsCleanup.batchSize}" />
+                <entry key="idsPerWorkItem" value="\${${moduleId}.propertyRootsCleanup.idsPerWorkItem}" />
+                <entry key="workerCount" value="\${${moduleId}.propertyRootsCleanup.workerCount}" />
+                <entry key="checkItemsLimit" value="\${${moduleId}.propertyRootsCleanup.checkItemsLimit}" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="${moduleId}-PropertyRootsCleanupJobTrigger" class="org.alfresco.util.CronTriggerBean">
+        <property name="jobDetail" ref="${moduleId}-PropertyRootsCleanupJob" />
+        <property name="scheduler" ref="schedulerFactory" />
+        <property name="cronExpression" value="\${${moduleId}.propertyRootsCleanup.cron}" />
+    </bean>
+
+    <bean id="${moduleId}-PropertyValuesCleanupJob" parent="${moduleId}-IncrementalPropertyTableCleanupJob">
+        <property name="jobClass" value="${project.artifactId}.job.PropertyValuesCleanupJob" />
+        <property name="jobDataAsMap">
+            <map merge="true">
+                <entry key="batchSize" value="\${${moduleId}.propertyValuesCleanup.batchSize}" />
+                <entry key="idsPerWorkItem" value="\${${moduleId}.propertyValuesCleanup.idsPerWorkItem}" />
+                <entry key="workerCount" value="\${${moduleId}.propertyValuesCleanup.workerCount}" />
+                <entry key="checkItemsLimit" value="\${${moduleId}.propertyValuesCleanup.checkItemsLimit}" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="${moduleId}-PropertyValuesCleanupJobTrigger" class="org.alfresco.util.CronTriggerBean">
+        <property name="jobDetail" ref="${moduleId}-PropertyValuesCleanupJob" />
+        <property name="scheduler" ref="schedulerFactory" />
+        <property name="cronExpression" value="\${${moduleId}.propertyValuesCleanup.cron}" />
+    </bean>
+
+    <bean id="${moduleId}-PropertyStringValuesCleanupJob" parent="${moduleId}-IncrementalPropertyTableCleanupJob">
+        <property name="jobClass" value="${project.artifactId}.job.PropertyStringValuesCleanupJob" />
+        <property name="jobDataAsMap">
+            <map merge="true">
+                <entry key="batchSize" value="\${${moduleId}.propertyStringValuesCleanup.batchSize}" />
+                <entry key="idsPerWorkItem" value="\${${moduleId}.propertyStringValuesCleanup.idsPerWorkItem}" />
+                <entry key="workerCount" value="\${${moduleId}.propertyStringValuesCleanup.workerCount}" />
+                <entry key="checkItemsLimit" value="\${${moduleId}.propertyStringValuesCleanup.checkItemsLimit}" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="${moduleId}-PropertyStringValuesCleanupJobTrigger" class="org.alfresco.util.CronTriggerBean">
+        <property name="jobDetail" ref="${moduleId}-PropertyStringValuesCleanupJob" />
+        <property name="scheduler" ref="schedulerFactory" />
+        <property name="cronExpression" value="\${${moduleId}.propertyStringValuesCleanup.cron}" />
+    </bean>
+
+    <bean id="${moduleId}-PropertyDoubleValuesCleanupJob" parent="${moduleId}-IncrementalPropertyTableCleanupJob">
+        <property name="jobClass" value="${project.artifactId}.job.PropertyDoubleValuesCleanupJob" />
+        <property name="jobDataAsMap">
+            <map merge="true">
+                <entry key="batchSize" value="\${${moduleId}.propertyDoubleValuesCleanup.batchSize}" />
+                <entry key="idsPerWorkItem" value="\${${moduleId}.propertyDoubleValuesCleanup.idsPerWorkItem}" />
+                <entry key="workerCount" value="\${${moduleId}.propertyDoubleValuesCleanup.workerCount}" />
+                <entry key="checkItemsLimit" value="\${${moduleId}.propertyDoubleValuesCleanup.checkItemsLimit}" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="${moduleId}-PropertyDoubleValuesCleanupJobTrigger" class="org.alfresco.util.CronTriggerBean">
+        <property name="jobDetail" ref="${moduleId}-PropertyDoubleValuesCleanupJob" />
+        <property name="scheduler" ref="schedulerFactory" />
+        <property name="cronExpression" value="\${${moduleId}.propertyDoubleValuesCleanup.cron}" />
+    </bean>
+
+    <bean id="${moduleId}-PropertySerializableValuesCleanupJob" parent="${moduleId}-IncrementalPropertyTableCleanupJob">
+        <property name="jobClass" value="${project.artifactId}.job.PropertySerializableValuesCleanupJob" />
+        <property name="jobDataAsMap">
+            <map merge="true">
+                <entry key="batchSize" value="\${${moduleId}.propertySerializableValuesCleanup.batchSize}" />
+                <entry key="idsPerWorkItem" value="\${${moduleId}.propertySerializableValuesCleanup.idsPerWorkItem}" />
+                <entry key="workerCount" value="\${${moduleId}.propertySerializableValuesCleanup.workerCount}" />
+                <entry key="checkItemsLimit" value="\${${moduleId}.propertySerializableValuesCleanup.checkItemsLimit}" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="${moduleId}-PropertySerializableValuesCleanupJobTrigger" class="org.alfresco.util.CronTriggerBean">
+        <property name="jobDetail" ref="${moduleId}-PropertySerializableValuesCleanupJob" />
+        <property name="scheduler" ref="schedulerFactory" />
+        <property name="cronExpression" value="\${${moduleId}.propertySerializableValuesCleanup.cron}" />
+    </bean>
 </beans>
