@@ -17,54 +17,44 @@
  -->
 <mapper namespace="propertyTableCleanup">
 
-    <!-- -->
-    <!-- Result Maps -->
-    <!-- -->
-    
-    <!-- -->
-    <!-- Parameter Maps -->
-    <!-- -->
-    
-    <!-- -->
-    <!-- Statements -->
-    <!-- -->
+    <!-- use "fetch first x rows" as ISO SQL:2008 pagination standard supported by most databases -->
 
-    <select id="select_maxPropertyRootId" resultType="java.lang.Long">
+    <select id="select_maxPropertyRootId" resultType="java.lang.Long" useCache="false">
         select
             max(pr.id)
         from
             alf_prop_root pr
     </select>
 
-    <select id="select_maxPropertyValueId" resultType="java.lang.Long">
+    <select id="select_maxPropertyValueId" resultType="java.lang.Long" useCache="false">
         select
             max(pv.id)
         from
             alf_prop_value pv
     </select>
 
-    <select id="select_maxPropertyDoubleValueId" resultType="java.lang.Long">
+    <select id="select_maxPropertyDoubleValueId" resultType="java.lang.Long" useCache="false">
         select
             max(pdv.id)
         from
             alf_prop_double_value pdv
     </select>
 
-    <select id="select_maxPropertyStringValueId" resultType="java.lang.Long">
+    <select id="select_maxPropertyStringValueId" resultType="java.lang.Long" useCache="false">
         select
             max(psv.id)
         from
             alf_prop_string_value psv
     </select>
 
-    <select id="select_maxPropertySerializableValueId" resultType="java.lang.Long">
+    <select id="select_maxPropertySerializableValueId" resultType="java.lang.Long" useCache="false">
         select
             max(psv.id)
         from
             alf_prop_serializable_value psv
     </select>
 
-    <select id="select_existingPropertyRootIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_existingPropertyRootIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             pr.id
         from
@@ -74,9 +64,12 @@
             pr.id &gt; #{fromId}
         </if>
         order by pr.id asc
+        <if test="maxItems != null">
+        fetch first #{maxItems} rows only
+        </if>
     </select>
    
-    <select id="select_existingPropertyValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_existingPropertyValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             pv.id
         from
@@ -86,9 +79,12 @@
             pv.id &gt; #{fromId}
         </if>
         order by pv.id asc
+        <if test="maxItems != null">
+        fetch first #{maxItems} rows only
+        </if>
     </select>
 
-    <select id="select_existingPropertyDoubleValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_existingPropertyDoubleValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             pdv.id
         from
@@ -98,9 +94,12 @@
             pdv.id &gt; #{fromId}
         </if>
         order by pdv.id asc
+        <if test="maxItems != null">
+        fetch first #{maxItems} rows only
+        </if>
     </select>
 
-    <select id="select_existingPropertyStringValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_existingPropertyStringValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             psv.id
         from
@@ -110,9 +109,12 @@
             psv.id &gt; #{fromId}
         </if>
         order by psv.id asc
+        <if test="maxItems != null">
+        fetch first #{maxItems} rows only
+        </if>
     </select>
 
-    <select id="select_existingPropertySerializableValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_existingPropertySerializableValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             psv.id
         from
@@ -122,9 +124,12 @@
             psv.id &gt; #{fromId}
         </if>
         order by psv.id asc
+        <if test="maxItems != null">
+        fetch first #{maxItems} rows only
+        </if>
     </select>
 
-    <select id="select_usedAuditValues" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_usedAuditValues" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             distinct ae.audit_values_id
         from
@@ -143,7 +148,7 @@
         </if>
     </select>
 
-    <select id="select_usedAuditUsers" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_usedAuditUsers" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             distinct ae.audit_user_id
         from
@@ -162,7 +167,7 @@
         </if>
     </select>
 
-    <select id="select_usedAuditAppNames" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_usedAuditAppNames" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             distinct aa.app_name_id
         from
@@ -181,7 +186,7 @@
         </if>
     </select>
 
-    <select id="select_usedAuditAppDisabledPaths" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_usedAuditAppDisabledPaths" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             distinct aa.disabled_paths_id
         from
@@ -200,7 +205,7 @@
         </if>
     </select>
 
-    <select id="select_usedPropLinkKeys" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_usedPropLinkKeys" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             distinct pl.key_prop_id
         from
@@ -219,7 +224,7 @@
         </if>
     </select>
 
-    <select id="select_usedPropLinkValues" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_usedPropLinkValues" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             distinct pl.value_prop_id
         from
@@ -238,7 +243,7 @@
         </if>
     </select>
 
-    <select id="select_usedUniqueContextProps" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_usedUniqueContextProps" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             distinct puc.prop1_id
         from
@@ -257,7 +262,7 @@
         </if>
     </select>
 
-    <select id="select_usedUniqueContextValues1" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_usedUniqueContextValues1" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             distinct puc.value1_prop_id
         from
@@ -276,7 +281,7 @@
         </if>
     </select>
 
-    <select id="select_usedUniqueContextValues2" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_usedUniqueContextValues2" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             distinct puc.value2_prop_id
         from
@@ -295,7 +300,7 @@
         </if>
     </select>
 
-    <select id="select_usedUniqueContextValues3" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_usedUniqueContextValues3" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             distinct puc.value3_prop_id
         from
@@ -314,7 +319,7 @@
         </if>
     </select>
 
-    <select id="select_usedPropertyDoubleValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_usedPropertyDoubleValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             distinct pv.long_value
         from
@@ -335,7 +340,7 @@
         </if>
     </select>
 
-    <select id="select_usedPropertyStringValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_usedPropertyStringValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             distinct pv.long_value
         from
@@ -356,7 +361,7 @@
         </if>
     </select>
 
-    <select id="select_usedPropertySerializableValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long">
+    <select id="select_usedPropertySerializableValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
         select
             distinct pv.long_value
         from

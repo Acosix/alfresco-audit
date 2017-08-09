@@ -17,8 +17,7 @@
  -->
 <mapper namespace="propertyTableCleanup">
 
-    <!-- use rownum-based pagination as Oracle 11g does not support "fetch first x rows" -->
-    <!-- (Oracle 11g may be relevant still on Alfresco 4.2) -->
+    <!-- use "limit x" as MySQl pagination style -->
 
     <select id="select_maxPropertyRootId" resultType="java.lang.Long" useCache="false">
         select
@@ -60,19 +59,14 @@
             pr.id
         from
             alf_prop_root pr
-        <if test="fromId != null || maxItems != null">
+        <if test="fromId != null">
         where
-            <if test="fromId != null">
             pr.id &gt; #{fromId}
-                <if test="maxItems != null">
-                and
-                </if>
-            </if>
-            <if test="maxItems != null">
-            rownum &lt;= #{maxItems}
-            </if>
         </if>
-      order by pr.id asc
+        order by pr.id asc
+        <if test="maxItems != null">
+        limit #{maxItems}
+        </if>
     </select>
    
     <select id="select_existingPropertyValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
@@ -80,19 +74,14 @@
             pv.id
         from
             alf_prop_value pv
-        <if test="fromId != null || maxItems != null">
+        <if test="fromId != null">
         where
-            <if test="fromId != null">
             pv.id &gt; #{fromId}
-                <if test="maxItems != null">
-                and
-                </if>
-            </if>
-            <if test="maxItems != null">
-            rownum &lt;= #{maxItems}
-            </if>
         </if>
-      order by pv.id asc
+        order by pv.id asc
+        <if test="maxItems != null">
+        limit #{maxItems}
+        </if>
     </select>
 
     <select id="select_existingPropertyDoubleValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
@@ -100,16 +89,14 @@
             pdv.id
         from
             alf_prop_double_value pdv
-        <if test="fromId != null || maxItems != null">
+        <if test="fromId != null">
         where
-            <if test="fromId != null">
             pdv.id &gt; #{fromId}
-            </if>
-            <if test="maxItems != null">
-            and rownum &lt;= #{maxItems}
-            </if>
         </if>
         order by pdv.id asc
+        <if test="maxItems != null">
+        limit #{maxItems}
+        </if>
     </select>
 
     <select id="select_existingPropertyStringValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
@@ -117,16 +104,14 @@
             psv.id
         from
             alf_prop_string_value psv
-        <if test="fromId != null || maxItems != null">
+        <if test="fromId != null">
         where
-            <if test="fromId != null">
             psv.id &gt; #{fromId}
-            </if>
-            <if test="maxItems != null">
-            and rownum &lt;= #{maxItems}
-            </if>
         </if>
         order by psv.id asc
+        <if test="maxItems != null">
+        limit #{maxItems}
+        </if>
     </select>
 
     <select id="select_existingPropertySerializableValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
@@ -134,16 +119,14 @@
             psv.id
         from
             alf_prop_serializable_value psv
-        <if test="fromId != null || maxItems != null">
+        <if test="fromId != null">
         where
-            <if test="fromId != null">
             psv.id &gt; #{fromId}
-            </if>
-            <if test="maxItems != null">
-            and rownum &lt;= #{maxItems}
-            </if>
         </if>
         order by psv.id asc
+        <if test="maxItems != null">
+        limit #{maxItems}
+        </if>
     </select>
 
     <select id="select_usedAuditValues" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
@@ -344,7 +327,7 @@
         where
             pv.persisted_type = 2
         <if test="fromId != null || toId != null">
-        and
+            and
             <if test="fromId != null">
             pv.long_value &gt;= #{fromId}
                 <if test="toId != null">
@@ -365,7 +348,7 @@
         where
             pv.persisted_type in (3,5,6)
         <if test="fromId != null || toId != null">
-        and
+            and
             <if test="fromId != null">
             pv.long_value &gt;= #{fromId}
                 <if test="toId != null">
