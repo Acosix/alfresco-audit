@@ -65,7 +65,7 @@
         </if>
         order by pr.id asc
         <if test="maxItems != null">
-        fetch first #{maxItems} rows only
+        fetch first ${maxItems} rows only
         </if>
     </select>
    
@@ -80,7 +80,7 @@
         </if>
         order by pv.id asc
         <if test="maxItems != null">
-        fetch first #{maxItems} rows only
+        fetch first ${maxItems} rows only
         </if>
     </select>
 
@@ -95,7 +95,7 @@
         </if>
         order by pdv.id asc
         <if test="maxItems != null">
-        fetch first #{maxItems} rows only
+        fetch first ${maxItems} rows only
         </if>
     </select>
 
@@ -110,7 +110,7 @@
         </if>
         order by psv.id asc
         <if test="maxItems != null">
-        fetch first #{maxItems} rows only
+        fetch first ${maxItems} rows only
         </if>
     </select>
 
@@ -125,7 +125,7 @@
         </if>
         order by psv.id asc
         <if test="maxItems != null">
-        fetch first #{maxItems} rows only
+        fetch first ${maxItems} rows only
         </if>
     </select>
 

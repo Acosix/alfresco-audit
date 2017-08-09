@@ -17,7 +17,8 @@
  -->
 <mapper namespace="propertyTableCleanup">
 
-    <!-- use "limit x" as MySQl pagination style -->
+    <!-- use "offset 0 rows fetch first x rows" as MS SQL specific pagination -->
+    <!-- "offset 0 rows" is mandatory to use fetch clause -->
 
     <select id="select_maxPropertyRootId" resultType="java.lang.Long" useCache="false">
         select
@@ -65,7 +66,7 @@
         </if>
         order by pr.id asc
         <if test="maxItems != null">
-        limit ${maxItems}
+        offset 0 rows fetch first ${maxItems} rows only
         </if>
     </select>
    
@@ -80,7 +81,7 @@
         </if>
         order by pv.id asc
         <if test="maxItems != null">
-        limit ${maxItems}
+        offset 0 rows fetch first ${maxItems} rows only
         </if>
     </select>
 
@@ -95,7 +96,7 @@
         </if>
         order by pdv.id asc
         <if test="maxItems != null">
-        limit ${maxItems}
+        offset 0 rows fetch first ${maxItems} rows only
         </if>
     </select>
 
@@ -110,7 +111,7 @@
         </if>
         order by psv.id asc
         <if test="maxItems != null">
-        limit ${maxItems}
+        offset 0 rows fetch first ${maxItems} rows only
         </if>
     </select>
 
@@ -125,7 +126,7 @@
         </if>
         order by psv.id asc
         <if test="maxItems != null">
-        limit ${maxItems}
+        offset 0 rows fetch first ${maxItems} rows only
         </if>
     </select>
 
