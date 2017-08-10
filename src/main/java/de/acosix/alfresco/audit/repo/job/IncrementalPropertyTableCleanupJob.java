@@ -178,7 +178,8 @@ public abstract class IncrementalPropertyTableCleanupJob implements Job
                 idsPerWorkItem, checkItemsLimit, lastId);
         final EntryIdsBatchWorker batchWorker = new EntryIdsBatchWorker(this, propertyTablesCleanupDAO);
         final BatchProcessor<List<Long>> batchProcessor = new BatchProcessor<>(simpleJobClassName, retryingTransactionHelper, workProvider,
-                workerCount, batchSize, null, LogFactory.getLog(this.getClass().getName() + ".batchProcessor"), batchSize * workerCount);
+                workerCount, batchSize, null, LogFactory.getLog(this.getClass().getName() + ".batchProcessor"),
+                Math.max(25, batchSize * workerCount * 2));
         batchProcessor.process(batchWorker, true);
 
         final Long newLastId = workProvider.getLastId();
