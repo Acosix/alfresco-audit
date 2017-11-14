@@ -287,7 +287,7 @@ public class PropertyTablesCleanupDAOImpl implements PropertyTablesCleanupDAO, I
         }
 
         final List<Long> ids = this.sqlSessionTemplate.selectList(query, queryBoundsParam, rowBounds);
-        LOGGER.debug("Selected {}alf_prop_*_value IDs for value type {} starting with exclusive from ID {} and {} max items", ids.size(),
+        LOGGER.debug("Selected {} alf_prop_*_value IDs for value type {} starting with exclusive from ID {} and {} max items", ids.size(),
                 valueTableType, fromIdExclusive, maxItems);
         LOGGER.trace("Retrieved alf_prop_*_value entries:", ids);
         return ids;
@@ -364,7 +364,8 @@ public class PropertyTablesCleanupDAOImpl implements PropertyTablesCleanupDAO, I
     {
         ParameterCheck.mandatoryCollection("ids", ids);
 
-        LOGGER.debug("Deleting alf_prop_root entries for IDs {}", ids);
+        LOGGER.debug("Deleting {} alf_prop_root entries", ids.size());
+        LOGGER.trace("Deleting alf_prop_root entries for IDs {}", ids);
 
         this.sqlSessionTemplate.delete(DELETE_UNUSED_PROPERTY_ROOTS, ids);
 
