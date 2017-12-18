@@ -6,12 +6,12 @@
     <parent>
         <groupId>de.acosix.alfresco.maven</groupId>
         <artifactId>de.acosix.alfresco.maven.module.parent</artifactId>
-        <version>1.0.0.2</version>
+        <version>1.0.0.3</version>
     </parent>
 
     <groupId>de.acosix.alfresco.audit</groupId>
     <artifactId>de.acosix.alfresco.audit.repo</artifactId>
-    <version>1.0.0.0-SNAPSHOT</version>
+    <version>1.0.0.0</version>
     <packaging>jar</packaging>
 
     <name>Acosix Alfresco Audit - Repository Module</name>
@@ -53,9 +53,7 @@
         <messages.packageId>acosix.audit</messages.packageId>
         <moduleId>acosix-audit</moduleId>
 
-        <alfresco.authorised-users.version>5.0.0.2</alfresco.authorised-users.version>
-
-        <utility.version>1.0.2.0-SNAPSHOT</utility.version>
+        <utility.version>1.0.2.0</utility.version>
         <acosix.utility.common.package>de.acosix.alfresco.utility.common</acosix.utility.common.package>
         <acosix.utility.repo.package>de.acosix.alfresco.utility.repo</acosix.utility.repo.package>
     </properties>
