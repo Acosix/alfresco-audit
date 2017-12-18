@@ -104,9 +104,12 @@
         where
             <if test="fromId != null">
             pdv.id &gt; #{fromId}
+                <if test="maxItems != null">
+                and
+                </if>
             </if>
             <if test="maxItems != null">
-            and rownum &lt;= #{maxItems}
+            rownum &lt;= #{maxItems}
             </if>
         </if>
         order by pdv.id asc
@@ -121,9 +124,12 @@
         where
             <if test="fromId != null">
             psv.id &gt; #{fromId}
+                <if test="maxItems != null">
+                and
+                </if>
             </if>
             <if test="maxItems != null">
-            and rownum &lt;= #{maxItems}
+            rownum &lt;= #{maxItems}
             </if>
         </if>
         order by psv.id asc
@@ -138,9 +144,12 @@
         where
             <if test="fromId != null">
             psv.id &gt; #{fromId}
+                <if test="maxItems != null">
+                and
+                </if>
             </if>
             <if test="maxItems != null">
-            and rownum &lt;= #{maxItems}
+            rownum &lt;= #{maxItems}
             </if>
         </if>
         order by psv.id asc
