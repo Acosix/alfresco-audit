@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Acosix GmbH
+ * Copyright 2017, 2018 Acosix GmbH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,35 +15,26 @@
  */
 package de.acosix.alfresco.audit.repo.web.scripts;
 
-import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.concurrent.atomic.AtomicLong;
 
-import org.alfresco.model.ContentModel;
+import org.alfresco.error.AlfrescoRuntimeException;
 import org.alfresco.repo.batch.BatchProcessor;
-import org.alfresco.repo.batch.BatchProcessor.BatchProcessWorkerAdaptor;
-import org.alfresco.repo.security.authentication.AuthenticationUtil;
-import org.alfresco.service.cmr.audit.AuditQueryParameters;
 import org.alfresco.service.cmr.audit.AuditService;
-import org.alfresco.service.cmr.audit.AuditService.AuditQueryCallback;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.repository.NodeService;
-import org.alfresco.service.cmr.repository.datatype.DefaultTypeConverter;
 import org.alfresco.service.cmr.search.SearchService;
 import org.alfresco.service.cmr.security.PersonService;
 import org.alfresco.service.namespace.NamespaceService;
-import org.alfresco.service.namespace.QName;
 import org.alfresco.service.transaction.TransactionService;
-import org.alfresco.util.ParameterCheck;
 import org.alfresco.util.PropertyCheck;
 import org.apache.commons.logging.LogFactory;
 import org.slf4j.Logger;
@@ -59,7 +50,9 @@ import org.springframework.extensions.webscripts.Status;
 import org.springframework.extensions.webscripts.WebScriptException;
 import org.springframework.extensions.webscripts.WebScriptRequest;
 
-import de.acosix.alfresco.audit.repo.web.scripts.AuditUserGet.AuditUserInfo.AuthorisedState;
+import de.acosix.alfresco.audit.repo.batch.AuditUserInfo;
+import de.acosix.alfresco.audit.repo.batch.PersonAuditWorker;
+import de.acosix.alfresco.audit.repo.batch.PersonAuditWorker.PersonAuditQueryMode;
 import de.acosix.alfresco.utility.repo.batch.PersonBatchWorkProvider;
 
 /**
@@ -70,206 +63,6 @@ import de.acosix.alfresco.utility.repo.batch.PersonBatchWorkProvider;
  */
 public class AuditUserGet extends DeclarativeWebScript implements InitializingBean, ApplicationContextAware
 {
-
-    public static class AuditUserInfo implements Comparable<AuditUserInfo>
-    {
-
-        public static enum AuthorisedState
-        {
-            AUTHORISED, DEAUTHORISED, UNKNOWN;
-        }
-
-        protected final String userName;
-
-        protected final NodeRef personRef;
-
-        protected final AuthorisedState authorisedState;
-
-        public AuditUserInfo(final String userName, final NodeRef personRef, final AuthorisedState authorisedState)
-        {
-            ParameterCheck.mandatoryString("userName", userName);
-            ParameterCheck.mandatory("personRef", personRef);
-            ParameterCheck.mandatory("authorisedState", authorisedState);
-            this.userName = userName;
-            this.personRef = personRef;
-            this.authorisedState = authorisedState;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int compareTo(final AuditUserInfo o)
-        {
-            return this.userName.compareTo(o.getUserName());
-        }
-
-        /**
-         * @return the userName
-         */
-        public String getUserName()
-        {
-            return this.userName;
-        }
-
-        /**
-         * @return the personRef
-         */
-        public NodeRef getPersonRef()
-        {
-            return this.personRef;
-        }
-
-        /**
-         * @return the authorisedState
-         */
-        public AuthorisedState getAuthorisedState()
-        {
-            return this.authorisedState;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((this.userName == null) ? 0 : this.userName.hashCode());
-            result = prime * result + ((this.personRef == null) ? 0 : this.personRef.hashCode());
-            return result;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean equals(final Object obj)
-        {
-            if (this == obj)
-            {
-                return true;
-            }
-            if (obj == null)
-            {
-                return false;
-            }
-            if (this.getClass() != obj.getClass())
-            {
-                return false;
-            }
-            final AuditUserInfo other = (AuditUserInfo) obj;
-            if (this.userName == null)
-            {
-                if (other.userName != null)
-                {
-                    return false;
-                }
-            }
-            else if (!this.userName.equals(other.userName))
-            {
-                return false;
-            }
-            if (this.personRef == null)
-            {
-                if (other.personRef != null)
-                {
-                    return false;
-                }
-            }
-            else if (!this.personRef.equals(other.personRef))
-            {
-                return false;
-            }
-            return true;
-        }
-    }
-
-    /**
-     *
-     * @author Axel Faust, <a href="http://acosix.de">Acosix GmbH</a>
-     */
-    public static class ActiveAuditUserInfo extends AuditUserInfo
-    {
-
-        protected final Date firstActive;
-
-        protected final Date lastActive;
-
-        public ActiveAuditUserInfo(final String userName, final NodeRef personRef, final AuthorisedState authorisedState,
-                final Date firstActive, final Date lastActive)
-        {
-            super(userName, personRef, authorisedState);
-            ParameterCheck.mandatory("firstActive", firstActive);
-            ParameterCheck.mandatory("lastActive", lastActive);
-            this.firstActive = new Date(firstActive.getTime());
-            this.lastActive = new Date(lastActive.getTime());
-        }
-
-        /**
-         * @return the firstActive
-         */
-        public Date getFirstActive()
-        {
-            return new Date(this.firstActive.getTime());
-        }
-
-        /**
-         * @return the lastActive
-         */
-        public Date getLastActive()
-        {
-            return new Date(this.lastActive.getTime());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int hashCode()
-        {
-            final int prime = 31;
-            int result = super.hashCode();
-            result = prime * result + ((this.firstActive == null) ? 0 : this.firstActive.hashCode());
-            result = prime * result + ((this.lastActive == null) ? 0 : this.lastActive.hashCode());
-            return result;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean equals(final Object obj)
-        {
-            if (!super.equals(obj))
-            {
-                return false;
-            }
-            final ActiveAuditUserInfo other = (ActiveAuditUserInfo) obj;
-            if (this.firstActive == null)
-            {
-                if (other.firstActive != null)
-                {
-                    return false;
-                }
-            }
-            else if (!this.firstActive.equals(other.firstActive))
-            {
-                return false;
-            }
-            if (this.lastActive == null)
-            {
-                if (other.lastActive != null)
-                {
-                    return false;
-                }
-            }
-            else if (!this.lastActive.equals(other.lastActive))
-            {
-                return false;
-            }
-            return true;
-        }
-
-    }
 
     public static enum LookBackMode
     {
@@ -694,227 +487,49 @@ public class AuditUserGet extends DeclarativeWebScript implements InitializingBe
     protected List<AuditUserInfo> queryAuditUsers(final long fromTime, final int workerThreads, final int batchSize,
             final int loggingInterval)
     {
-        final PersonAuditWorker personAuditWorker = new PersonAuditWorker(fromTime, this.queryActiveUsers);
+        final PersonAuditWorker personAuditWorker = new PersonAuditWorker(fromTime,
+                this.queryActiveUsers ? PersonAuditQueryMode.ACTIVE_ONLY : PersonAuditQueryMode.INACTIVE_ONLY, this.auditApplicationName,
+                this.nodeService, this.auditService);
+
+        personAuditWorker.setUserAuditPath(this.userAuditPath);
+        personAuditWorker.setDateAuditPath(this.dateAuditPath);
+        personAuditWorker.setDateFromAuditPath(this.dateFromAuditPath);
+        personAuditWorker.setDateToAuditPath(this.dateToAuditPath);
+        if (this.isAuthorizedHandle != null && this.isDeauthorizedHandle != null)
+        {
+            personAuditWorker.setIsAuthorisedCheck(userName -> {
+                try
+                {
+                    final Object result = this.isAuthorizedHandle.invoke(this.authorisationService, userName);
+                    return (Boolean) result;
+                }
+                catch (InvocationTargetException | IllegalAccessException e)
+                {
+                    throw new AlfrescoRuntimeException("Unexpected error invoking Enterprise-only API", e);
+                }
+            });
+            personAuditWorker.setIsDeauthorisedCheck(userName -> {
+                try
+                {
+                    final Object result = this.isDeauthorizedHandle.invoke(this.authorisationService, userName);
+                    return (Boolean) result;
+                }
+                catch (InvocationTargetException | IllegalAccessException e)
+                {
+                    throw new AlfrescoRuntimeException("Unexpected error invoking Enterprise-only API", e);
+                }
+            });
+        }
+
         final BatchProcessor<NodeRef> processor = new BatchProcessor<>(AuditUserGet.class.getName(),
                 this.transactionService.getRetryingTransactionHelper(),
                 new PersonBatchWorkProvider(this.namespaceService, this.nodeService, this.personService, this.searchService), workerThreads,
                 batchSize, null, LogFactory.getLog(AuditUserGet.class), loggingInterval);
+
         processor.process(personAuditWorker, true);
 
-        final List<AuditUserInfo> activeUsers = new ArrayList<>(personAuditWorker.getUsers());
-        Collections.sort(activeUsers);
-        return activeUsers;
-    }
-
-    protected class PersonAuditWorker extends BatchProcessWorkerAdaptor<NodeRef>
-    {
-
-        private final List<AuditUserInfo> users = new ArrayList<>();
-
-        private final List<AuditUserInfo> usersSync = Collections.synchronizedList(this.users);
-
-        private final long fromTime;
-
-        private final boolean queryActiveUsers;
-
-        private final String runAsUser = AuthenticationUtil.getRunAsUser();
-
-        protected PersonAuditWorker(final long fromTime, final boolean queryActiveUsers)
-        {
-            this.fromTime = fromTime;
-            this.queryActiveUsers = queryActiveUsers;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void beforeProcess() throws Throwable
-        {
-            AuthenticationUtil.setRunAsUser(this.runAsUser);
-        }
-
-        /**
-         *
-         * {@inheritDoc}
-         */
-        @Override
-        public void process(final NodeRef personRef) throws Throwable
-        {
-            final Map<QName, Serializable> personProperties = AuditUserGet.this.nodeService.getProperties(personRef);
-            final String userName = DefaultTypeConverter.INSTANCE.convert(String.class, personProperties.get(ContentModel.PROP_USERNAME));
-
-            final AuditQueryParameters aqp = new AuditQueryParameters();
-            aqp.setApplicationName(AuditUserGet.this.auditApplicationName);
-
-            aqp.setForward(true);
-            if (AuditUserGet.this.userAuditPath != null)
-            {
-                aqp.addSearchKey(AuditUserGet.this.userAuditPath, userName);
-            }
-            else
-            {
-                aqp.setUser(userName);
-            }
-            aqp.setFromTime(this.fromTime);
-
-            final AtomicLong firstActive = new AtomicLong(-1);
-            final AtomicLong lastActive = new AtomicLong(-1);
-
-            final boolean useDateValuesFromAuditData = AuditUserGet.this.dateFromAuditPath != null
-                    || AuditUserGet.this.dateToAuditPath != null || AuditUserGet.this.dateAuditPath != null;
-
-            AuditUserGet.this.auditService.auditQuery(new AuditQueryCallback()
-            {
-
-                /**
-                 *
-                 * {@inheritDoc}
-                 */
-                @Override
-                public boolean valuesRequired()
-                {
-                    return useDateValuesFromAuditData;
-                }
-
-                /**
-                 *
-                 * {@inheritDoc}
-                 */
-                @Override
-                public boolean handleAuditEntry(final Long entryId, final String applicationName, final String user, final long time,
-                        final Map<String, Serializable> values)
-                {
-                    Long effectiveFirstTime;
-                    final Long effectiveLastTime;
-
-                    if (AuditUserGet.this.dateAuditPath != null)
-                    {
-                        // implicitly handles ISO8601 text values
-                        final Date dateValue = DefaultTypeConverter.INSTANCE.convert(Date.class,
-                                values.get(AuditUserGet.this.dateAuditPath));
-                        effectiveFirstTime = Long.valueOf(dateValue.getTime());
-                        effectiveLastTime = effectiveFirstTime;
-                    }
-                    else if (AuditUserGet.this.dateFromAuditPath != null && AuditUserGet.this.dateToAuditPath != null)
-                    {
-                        // implicitly handles ISO8601 text values
-                        final Date dateFromValue = DefaultTypeConverter.INSTANCE.convert(Date.class,
-                                values.get(AuditUserGet.this.dateFromAuditPath));
-                        final Date dateToValue = DefaultTypeConverter.INSTANCE.convert(Date.class,
-                                values.get(AuditUserGet.this.dateToAuditPath));
-                        effectiveFirstTime = Long.valueOf(dateFromValue.getTime());
-                        effectiveLastTime = Long.valueOf(dateToValue.getTime());
-                    }
-                    else
-                    {
-                        effectiveFirstTime = time;
-                        effectiveLastTime = time;
-                    }
-
-                    if (firstActive.get() == -1 || firstActive.get() > effectiveFirstTime.longValue())
-                    {
-                        firstActive.set(effectiveFirstTime.longValue());
-                    }
-
-                    if (lastActive.get() == -1 || lastActive.get() < effectiveLastTime.longValue())
-                    {
-                        lastActive.set(effectiveLastTime.longValue());
-                    }
-
-                    return true;
-                }
-
-                /**
-                 *
-                 * {@inheritDoc}
-                 */
-                @Override
-                public boolean handleAuditEntryError(final Long entryId, final String errorMsg, final Throwable error)
-                {
-                    return true;
-                }
-
-            }, aqp, useDateValuesFromAuditData ? Integer.MAX_VALUE : 1);
-            // we cannot rely on date-based ordering to retrieve firstActive only by looking at first entry
-
-            // and only if we can rely on date-based ordering is it appropriate to only look at last entry for lastActive
-            if (!useDateValuesFromAuditData)
-            {
-                aqp.setForward(false);
-                AuditUserGet.this.auditService.auditQuery(new AuditQueryCallback()
-                {
-
-                    /**
-                     *
-                     * {@inheritDoc}
-                     */
-                    @Override
-                    public boolean valuesRequired()
-                    {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean handleAuditEntry(final Long entryId, final String applicationName, final String user, final long time,
-                            final Map<String, Serializable> values)
-                    {
-                        lastActive.set(time);
-                        return true;
-                    }
-
-                    @Override
-                    public boolean handleAuditEntryError(final Long entryId, final String errorMsg, final Throwable error)
-                    {
-                        return true;
-                    }
-
-                }, aqp, 1);
-            }
-
-            final AuthorisedState authorisedState;
-            if (AuditUserGet.this.isAuthorizedHandle != null && AuditUserGet.this.isDeauthorizedHandle != null)
-            {
-                final boolean isAuthorised = Boolean.TRUE
-                        .equals(AuditUserGet.this.isAuthorizedHandle.invoke(AuditUserGet.this.authorisationService, userName));
-                final boolean isDeauthorised = Boolean.TRUE
-                        .equals(AuditUserGet.this.isDeauthorizedHandle.invoke(AuditUserGet.this.authorisationService, userName));
-                authorisedState = isAuthorised ? AuthorisedState.AUTHORISED
-                        : (isDeauthorised ? AuthorisedState.DEAUTHORISED : AuthorisedState.UNKNOWN);
-            }
-            else
-            {
-                authorisedState = AuthorisedState.UNKNOWN;
-            }
-
-            // we found an instance of the user
-            if (this.queryActiveUsers && firstActive.get() != -1)
-            {
-                this.usersSync.add(new ActiveAuditUserInfo(userName, personRef, authorisedState, new Date(firstActive.get()),
-                        new Date(lastActive.get())));
-            }
-            else if (!this.queryActiveUsers && firstActive.get() == -1)
-            {
-                this.usersSync.add(new AuditUserInfo(userName, personRef, authorisedState));
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void afterProcess() throws Throwable
-        {
-            AuthenticationUtil.clearCurrentSecurityContext();
-        }
-
-        /**
-         * @return the activeUsers
-         */
-        public List<AuditUserInfo> getUsers()
-        {
-            return Collections.unmodifiableList(this.users);
-        }
-
+        final List<AuditUserInfo> auditUsers = new ArrayList<>(personAuditWorker.getUsers());
+        Collections.sort(auditUsers);
+        return auditUsers;
     }
 }
