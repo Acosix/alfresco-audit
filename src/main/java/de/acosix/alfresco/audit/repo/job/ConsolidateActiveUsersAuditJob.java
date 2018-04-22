@@ -194,7 +194,7 @@ public class ConsolidateActiveUsersAuditJob implements Job
             LOGGER.debug("Clearing active user login entries {}", auditEntryIds);
             this.auditService.clearAudit(auditEntryIds);
 
-            LOGGER.debug("Recoding active user time frames {}", timeframes);
+            LOGGER.debug("Recording active user time frames {}", timeframes);
             this.recordTimeframes(userName, timeframes);
         }
 
