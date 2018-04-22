@@ -56,6 +56,13 @@ By default the web scripts will use the _acosix-audit-activeUsers_ audit applica
 - _dateFromAuditPath_ - the path to a date or ISO 8601 string value within the audit data that denotes the start of a timeframe in which the user was active; must be set together with _dateToAuditPath_ (default: _/acosix-audit-activeUsers/timeframeStart_)
 - _dateToAuditPath_ - the path to a date or ISO 8601 string value within the audit data that denotes the end of a timeframe in which the user was active; must be set together with _dateFromAuditPath_ (default: _/acosix-audit-activeUsers/timeframeEnd_)
 - _dateAuditPath_ - the path to a date or ISO 8601 string value within the audit data that denotes an effective date at which the user was active
+- _defaultLookBackMode_ - the default lookBackMode if no parameter is provided in the web script call (default: months)
+- _defaultLookBackDays_ - the amount of days to look back if lookBackMode is "days" and no parameter is provided in the web script call (default: 90)
+- _defaultLookBackMonths_ - the amount of months to look back if lookBackMode is "months" and no parameter is provided in the web script call (default: 3)
+- _defaultLookBackYears_ - the amount of years to look back if lookBackMode is "years" and no parameter is provided in the web script call (default: 1)
+- _defaultBatchSize_ - the size of an atomic batch of users to process if no parameter is provided in the web script call (default: 10)
+- _defaultWorkerThreads_ - the number of parallel worker threads to use if no parameter is provided in the web script call (default: 4)
+- _defaultLoggingInterval_ - the number of processed users after which to log process information (default: 50)
 
 If none of the date-related configuration properties are set to a valid constellation, the date of the audit entries will be used as input to the report of the web scripts.
 
