@@ -485,23 +485,29 @@ public abstract class AbstractAuditUserWebScript extends DeclarativeWebScript im
                 throw new WebScriptException(Status.STATUS_BAD_REQUEST, "Invalid value for lookBackAmount: " + lookBackAmountParam);
             }
         }
-        parameters.setLookBackAmount(lookBackAmount);
 
-        final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        int calendarField;
         switch (lookBackMode)
         {
             case DAYS:
-                cal.add(Calendar.DATE, -(lookBackAmount > 0 ? lookBackAmount : this.lookBackDays));
+                calendarField = Calendar.DATE;
+                lookBackAmount = lookBackAmount > 0 ? lookBackAmount : this.lookBackDays;
                 break;
             case MONTHS:
-                cal.add(Calendar.MONTH, -(lookBackAmount > 0 ? lookBackAmount : this.lookBackMonths));
+                calendarField = Calendar.MONTH;
+                lookBackAmount = lookBackAmount > 0 ? lookBackAmount : this.lookBackMonths;
                 break;
             case YEARS:
-                cal.add(Calendar.YEAR, -(lookBackAmount > 0 ? lookBackAmount : this.lookBackYears));
+                calendarField = Calendar.YEAR;
+                lookBackAmount = lookBackAmount > 0 ? lookBackAmount : this.lookBackYears;
                 break;
             default:
                 throw new UnsupportedOperationException("Unsupported mode: " + this.lookBackMode);
         }
+        parameters.setLookBackAmount(lookBackAmount);
+
+        final Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
+        cal.add(calendarField, -lookBackAmount);
         final long fromTime = cal.getTimeInMillis();
         parameters.setFromTime(fromTime);
 
