@@ -358,6 +358,7 @@ public class PersonAuditWorker extends BatchProcessWorkerAdaptor<NodeRef>
                 public boolean handleAuditEntry(final Long entryId, final String applicationName, final String user, final long time,
                         final Map<String, Serializable> values)
                 {
+                    LOGGER.trace("Using audit timestamp {} as last active date for user {} from audit entry {}", time, userName, entryId);
                     lastActive.set(time);
                     return true;
                 }

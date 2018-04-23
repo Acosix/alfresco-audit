@@ -24,6 +24,7 @@ import java.util.TimeZone;
 import java.util.function.Supplier;
 
 import org.alfresco.repo.batch.BatchProcessor;
+import org.alfresco.repo.security.authentication.AuthenticationUtil;
 import org.alfresco.service.cmr.audit.AuditService;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.repository.NodeService;
@@ -33,6 +34,8 @@ import org.alfresco.service.namespace.NamespaceService;
 import org.alfresco.service.transaction.TransactionService;
 import org.alfresco.util.PropertyCheck;
 import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -541,23 +544,30 @@ public abstract class AbstractAuditUserWebScript extends DeclarativeWebScript im
     protected <T extends AuditUserWebScriptParameters> List<AuditUserInfo> queryAuditUsers(final PersonAuditQueryMode mode,
             final T parameters)
     {
-        final PersonAuditWorker personAuditWorker = this.createBatchWorker(mode, parameters);
-        final BatchProcessor<NodeRef> processor = new BatchProcessor<>(AuditUserGet.class.getName(),
-                this.transactionService.getRetryingTransactionHelper(),
-                new PersonBatchWorkProvider(this.namespaceService, this.nodeService, this.personService, this.searchService),
-                parameters.getWorkerThreads(), parameters.getBatchSize(), null,
-                LogFactory.getLog(this.getClass().getName() + ".batchProcessor"), this.loggingInterval);
+        // can run as system as web script requires admin authentication
+        // improves performance and may avoid overwhelming readersCache, readersDeniedCache and others
+        return AuthenticationUtil.runAsSystem(() -> {
+            final PersonAuditWorker personAuditWorker = this.createBatchWorker(mode, parameters);
+            final BatchProcessor<NodeRef> processor = new BatchProcessor<>(this.getClass().getSimpleName() + "-AuditUserQuery",
+                    this.transactionService.getRetryingTransactionHelper(),
+                    new PersonBatchWorkProvider(this.namespaceService, this.nodeService, this.personService, this.searchService),
+                    parameters.getWorkerThreads(), parameters.getBatchSize(), null,
+                    LogFactory.getLog(this.getClass().getName() + ".batchProcessor"), this.loggingInterval);
 
-        processor.process(personAuditWorker, true);
+            processor.process(personAuditWorker, true);
 
-        final List<AuditUserInfo> auditUsers = new ArrayList<>(personAuditWorker.getUsers());
-        Collections.sort(auditUsers);
-        return auditUsers;
+            final List<AuditUserInfo> auditUsers = new ArrayList<>(personAuditWorker.getUsers());
+            Collections.sort(auditUsers);
+            return auditUsers;
+        });
     }
 
     protected <T extends AuditUserWebScriptParameters> PersonAuditWorker createBatchWorker(final PersonAuditQueryMode mode,
             final T parameters)
     {
+        final Logger logger = LoggerFactory.getLogger(this.getClass());
+        logger.debug("Querying for {} users (any/no activity since {}) via audit application {}", mode, parameters.getFromTime(),
+                this.auditApplicationName);
         final PersonAuditWorker personAuditWorker = new PersonAuditWorker(parameters.getFromTime(), mode, this.auditApplicationName,
                 this.nodeService, this.auditService);
 
@@ -565,6 +575,9 @@ public abstract class AbstractAuditUserWebScript extends DeclarativeWebScript im
         personAuditWorker.setDateAuditPath(this.dateAuditPath);
         personAuditWorker.setDateFromAuditPath(this.dateFromAuditPath);
         personAuditWorker.setDateToAuditPath(this.dateToAuditPath);
+
+        logger.trace("Using userAuditPath {}, dateAuditPath {}, dateFromAuditPath {}, dateToAuditPath {}", this.userAuditPath,
+                this.dateAuditPath, this.dateFromAuditPath, this.dateToAuditPath);
 
         return personAuditWorker;
     }
