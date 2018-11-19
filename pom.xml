@@ -20,7 +20,7 @@
 
     <parent>
         <groupId>de.acosix.alfresco.maven</groupId>
-        <artifactId>de.acosix.alfresco.maven.module.parent</artifactId>
+        <artifactId>de.acosix.alfresco.maven.module.parent-5.0.d</artifactId>
         <version>1.0.0.4-SNAPSHOT</version>
     </parent>
 
