@@ -86,6 +86,8 @@
         <property name="propertiesSource" ref="global-properties" />
         <property name="targetBeanName" value="sharepointAuthenticationListener" />
         <property name="expectedClassName" value="${acosix.utility.repo.package}.web.auth.AuthenticationListenersFacade" />
+        <!-- no longer exists in Alfresco 6.0 -->
+        <property name="failIfTargetBeanMissing" value="false" />
         <property name="propertyName" value="authenticationListeners" />
         <property name="beanReferenceNameList">
             <list>
