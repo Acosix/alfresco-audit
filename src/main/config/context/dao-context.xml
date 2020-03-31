@@ -15,7 +15,7 @@
  limitations under the License.
  -->
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="
+    xsi:schemaLocation="
            http://www.springframework.org/schema/beans
            http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
@@ -32,16 +32,16 @@
     <bean id="${moduleId}-PropertyTablesCleanupDAO" class="${project.artifactId}.dao.PropertyTablesCleanupDAOImpl">
         <property name="sqlSessionTemplate" ref="${moduleId}-customSqlSessionTemplate" />
 
-        <!-- note: not by accident - Alfresco uses cache for these cases -->
+        <!-- note: reuse is not by accident, Alfresco uses the caches for these cases -->
         <property name="propertyRootCache" ref="propertyValueCache" />
         <property name="propertyValueCache" ref="propertyValueCache" />
-
-        <!-- caches not configured in default Alfresco -->
-        <!--
-            <property name="propertyDoubleValueCache" ref="propertyDoubleValueCache" />
-            <property name="propertyStringValueCache" ref="propertyStringValueCache" />
-            <property name="propertySerializableValueCache" ref="propertySerializableValueCache" />
-        -->
+      
+      <!-- caches not configured in default Alfresco -->
+      <!-- 
+          <property name="propertyDoubleValueCache" ref="propertyDoubleValueCache" />
+          <property name="propertyStringValueCache" ref="propertyStringValueCache" />
+          <property name="propertySerializableValueCache" ref="propertySerializableValueCache" />
+       -->
     </bean>
 
 </beans>

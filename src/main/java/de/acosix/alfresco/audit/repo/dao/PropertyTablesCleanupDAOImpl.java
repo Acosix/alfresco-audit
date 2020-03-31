@@ -371,10 +371,9 @@ public class PropertyTablesCleanupDAOImpl implements PropertyTablesCleanupDAO, I
 
         if (this.propertyRootCache != null)
         {
-            for (final Long id : ids)
-            {
-                this.propertyRootCache.remove(id);
-            }
+            // due to complex key->entry + valueKey->entry mappings, it is easier + more efficient to just clear the cache
+            // (blame Alfresco's cache design)
+            this.propertyRootCache.clear();
         }
     }
 
@@ -391,12 +390,12 @@ public class PropertyTablesCleanupDAOImpl implements PropertyTablesCleanupDAO, I
 
         this.sqlSessionTemplate.delete(DELETE_UNUSED_PROPERTY_VALUES, ids);
 
-        if (this.propertyRootCache != null)
+        if (this.propertyValueCache != null)
         {
-            for (final Long id : ids)
-            {
-                this.propertyValueCache.remove(id);
-            }
+            // due to complex key->entry + valueKey->entry mappings, it is easier + more efficient to just clear the cache
+            // there is also no way to limit the clearing to a particular cache region in case of cache re-use (default)
+            // (blame Alfresco's cache design)
+            this.propertyValueCache.clear();
         }
     }
 
@@ -435,10 +434,10 @@ public class PropertyTablesCleanupDAOImpl implements PropertyTablesCleanupDAO, I
         this.sqlSessionTemplate.delete(query, ids);
         if (cache != null)
         {
-            for (final Long id : ids)
-            {
-                cache.remove(id);
-            }
+            // due to complex key->entry + valueKey->entry mappings, it is easier + more efficient to just clear the cache
+            // there is also no way to limit the clearing to a particular cache region in case of cache re-use (default)
+            // (blame Alfresco's cache design)
+            cache.clear();
         }
     }
 

@@ -50,14 +50,12 @@ import org.alfresco.util.EqualsHelper;
 import org.alfresco.util.ISO8601DateFormat;
 import org.alfresco.util.Pair;
 import org.apache.commons.logging.LogFactory;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.acosix.alfresco.audit.repo.AuditModuleConstants;
 import de.acosix.alfresco.utility.repo.batch.PersonBatchWorkProvider;
+import de.acosix.alfresco.utility.repo.job.GenericJob;
 import de.acosix.alfresco.utility.repo.job.JobUtilities;
 
 /**
@@ -68,7 +66,7 @@ import de.acosix.alfresco.utility.repo.job.JobUtilities;
  *
  * @author Axel Faust, <a href="http://acosix.de">Acosix GmbH</a>
  */
-public class ConsolidateActiveUsersAuditJob implements Job
+public class ConsolidateActiveUsersAuditJob implements GenericJob
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConsolidateActiveUsersAuditJob.class);
@@ -81,7 +79,7 @@ public class ConsolidateActiveUsersAuditJob implements Job
      * {@inheritDoc}
      */
     @Override
-    public void execute(final JobExecutionContext context) throws JobExecutionException
+    public void execute(final Object context)
     {
         try
         {
@@ -112,7 +110,7 @@ public class ConsolidateActiveUsersAuditJob implements Job
         }
     }
 
-    protected void consolidateActiveUsersAudit(final JobExecutionContext context, final RetryingTransactionHelper retryingTransactionHelper)
+    protected void consolidateActiveUsersAudit(final Object context, final RetryingTransactionHelper retryingTransactionHelper)
     {
         final AuditService auditService = JobUtilities.getJobDataValue(context, "auditService", AuditService.class);
         final AuditComponent auditComponent = JobUtilities.getJobDataValue(context, "auditComponent", AuditComponent.class);

@@ -34,13 +34,11 @@ import org.alfresco.service.namespace.QName;
 import org.alfresco.service.transaction.TransactionService;
 import org.alfresco.util.EqualsHelper;
 import org.apache.commons.logging.LogFactory;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 
 import de.acosix.alfresco.audit.repo.AuditModuleConstants;
 import de.acosix.alfresco.audit.repo.dao.PropertyTablesCleanupDAO;
+import de.acosix.alfresco.utility.repo.job.GenericJob;
 import de.acosix.alfresco.utility.repo.job.JobUtilities;
 import de.acosix.alfresco.utility.repo.job.JobUtilities.LockReleasedCheck;
 
@@ -53,7 +51,7 @@ import de.acosix.alfresco.utility.repo.job.JobUtilities.LockReleasedCheck;
  * @author Axel Faust, <a href="http://acosix.de">Acosix GmbH</a>
  *
  */
-public abstract class IncrementalPropertyTableCleanupJob implements Job
+public abstract class IncrementalPropertyTableCleanupJob implements GenericJob
 {
 
     private static final String ATTR_LAST_ID = "lastId";
@@ -63,7 +61,7 @@ public abstract class IncrementalPropertyTableCleanupJob implements Job
      * {@inheritDoc}
      */
     @Override
-    public void execute(final JobExecutionContext context) throws JobExecutionException
+    public void execute(final Object context)
     {
         final Logger logger = this.getLogger();
         final QName lockQName = QName.createQName(AuditModuleConstants.SERVICE_NAMESPACE, this.getClass().getSimpleName());
@@ -148,7 +146,7 @@ public abstract class IncrementalPropertyTableCleanupJob implements Job
      */
     abstract protected void deleteEntries(PropertyTablesCleanupDAO cleanupDAO, List<Long> batchIds);
 
-    protected void doCleanup(final JobExecutionContext context, final RetryingTransactionHelper retryingTransactionHelper,
+    protected void doCleanup(final Object context, final RetryingTransactionHelper retryingTransactionHelper,
             final LockReleasedCheck lockReleaseCheck)
     {
         final AttributeService attributeService = JobUtilities.getJobDataValue(context, "attributeService", AttributeService.class);

@@ -26,13 +26,11 @@ import org.alfresco.repo.transaction.RetryingTransactionHelper;
 import org.alfresco.service.cmr.audit.AuditService;
 import org.alfresco.service.namespace.QName;
 import org.alfresco.service.transaction.TransactionService;
-import org.quartz.Job;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.acosix.alfresco.audit.repo.AuditModuleConstants;
+import de.acosix.alfresco.utility.repo.job.GenericJob;
 import de.acosix.alfresco.utility.repo.job.JobUtilities;
 
 /**
@@ -40,7 +38,7 @@ import de.acosix.alfresco.utility.repo.job.JobUtilities;
  *
  * @author Axel Faust, <a href="http://acosix.de">Acosix GmbH</a>
  */
-public class AuditApplicationCleanupJob implements Job
+public class AuditApplicationCleanupJob implements GenericJob
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuditApplicationCleanupJob.class);
@@ -53,7 +51,7 @@ public class AuditApplicationCleanupJob implements Job
      * {@inheritDoc}
      */
     @Override
-    public void execute(final JobExecutionContext context) throws JobExecutionException
+    public void execute(final Object context)
     {
         try
         {
@@ -85,7 +83,7 @@ public class AuditApplicationCleanupJob implements Job
         }
     }
 
-    protected void cleanupAuditData(final String auditApplicationName, final JobExecutionContext context)
+    protected void cleanupAuditData(final String auditApplicationName, final Object context)
     {
         final AuditService auditService = JobUtilities.getJobDataValue(context, "auditService", AuditService.class);
 
