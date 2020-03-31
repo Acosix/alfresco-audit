@@ -6,7 +6,7 @@ This addon aims to provide some general use functionality and utilities relating
 
 ## Compatbility
 
-This addon has been built to be compatible with Alfresco Community and Enterprise Edition 5.1, though it technically is compatible with 5.0 as well as long as Java 8 is used to run Alfresco.
+This module is built to be compatible with Alfresco 5.0 and above. It may be used on either Community or Enterprise Edition.
 
 ## Features
 
@@ -68,143 +68,61 @@ If none of the date-related configuration properties are set to a valid constell
 
 Reports are provided in JSON or CSV format, with JSON being the default if a specific format is not reqeusted by using the URL parameter _?format=xxx_ or adding a file extension to the URL. The report of active users will include the earliest and latest date within the reporting time frame at which the user was active - this may be the abstract boundaries of "user interaction time frames" if defined and extracted from the underlying audit application. 
 
-# Maven usage
+# Build
 
-This addon is being built using the [Acosix Alfresco Maven framework](https://github.com/Acosix/alfresco-maven) and produces both AMP and installable JAR artifacts. Depending on the setup of a project that wants to include the addon, different approaches can be used to include it in the build.
+This project uses a Maven build using templates from the [Acosix Alfresco Maven](https://github.com/Acosix/alfresco-maven) project and produces module AMPs, regular Java *classes* JARs, JavaDoc and source attachment JARs, as well as installable (Simple Alfresco Module) JAR artifacts for the Alfresco Content Services and Share extensions. If the installable JAR artifacts are used for installing this module, developers / users are advised to consult the 'Dependencies' section of this README.
 
-## Build
+## Maven toolchains
 
-This project can be build simply by executing the standard Maven build lifecycles for package, install or deploy depending on the intent for further processing. A Java Development Kit (JDK) version 8 or higher is required for the build.
-
-## Dependency in Alfresco SDK
-
-The simplest option to include the addon in an All-in-One project is by declaring a dependency to the installable JAR artifact. Alternatively, the AMP package may be included which typically requires additional configuration in addition to the dependency.
-
-### Using SNAPSHOT builds
-
-In order to use a pre-built SNAPSHOT artifact published to the Open Source Sonatype Repository Hosting site, the artifact repository may need to be added to the POM, global settings.xml or an artifact repository proxy server. The following is the XML snippet for inclusion in a POM file.
+By inheritance from the Acosix Alfresco Maven framework, this project uses the [Maven Toolchains plugin](http://maven.apache.org/plugins/maven-toolchains-plugin/) to allow potential cross-compilation against different Java versions. This plugin is used to avoid potentially inconsistent compiler and library versions compared to when only the source/target compiler options of the Maven compiler plugin are set, which (as an example) has caused issues with some Alfresco releases in the past where Alfresco compiled for Java 7 using the Java 8 libraries.
+In order to build the project it is necessary to provide a basic toolchain configuration via the user specific Maven configuration home (usually ~/.m2/). That file (toolchains.xml) only needs to list the path to a compatible JDK for the Java version required by this project. The following is a sample file defining a Java 7 and 8 development kit.
 
 ```xml
-<repositories>
-    <repository>
-        <id>ossrh</id>
-        <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        <snapshots>
-            <enabled>true</enabled>
-        </snapshots>
-    </repository>
-</repositories>
-```
-
-### Repository
-
-```xml
-<dependency>
-    <groupId>de.acosix.alfresco.utility</groupId>
-    <artifactId>de.acosix.alfresco.utility.common</artifactId>
-    <version>1.0.2.0</version>
-    <type>jar</type>
-</dependency>
-
-<dependency>
-    <groupId>de.acosix.alfresco.utility</groupId>
-    <artifactId>de.acosix.alfresco.utility.repo</artifactId>
-    <version>1.0.2.0</version>
-    <type>jar</type>
-    <classifier>installable</classifier>
-</dependency>
-
-<dependency>
-    <groupId>de.acosix.alfresco.audit</groupId>
-    <artifactId>de.acosix.alfresco.audit.repo</artifactId>
-    <version>1.0.0.0</version>
-    <type>jar</type>
-    <classifier>installable</classifier>
-</dependency>
-
-<!-- OR -->
-
-<!-- AMP packaging -->
-<dependency>
-    <groupId>de.acosix.alfresco.utility</groupId>
-    <artifactId>de.acosix.alfresco.utility.repo</artifactId>
-    <version>1.0.2.0</version>
-    <type>amp</type>
-</dependency>
-
-<dependency>
-    <groupId>de.acosix.alfresco.audit</groupId>
-    <artifactId>de.acosix.alfresco.audit.repo</artifactId>
-    <version>1.0.0.0</version>
-    <type>amp</type>
-</dependency>
-
-<plugin>
-    <artifactId>maven-war-plugin</artifactId>
+<?xml version='1.0' encoding='UTF-8'?>
+<toolchains xmlns="http://maven.apache.org/TOOLCHAINS/1.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/TOOLCHAINS/1.1.0 http://maven.apache.org/xsd/toolchains-1.1.0.xsd">
+  <toolchain>
+    <type>jdk</type>
+    <provides>
+      <version>1.8</version>
+      <vendor>oracle</vendor>
+    </provides>
     <configuration>
-        <overlays>
-            <overlay />
-            <overlay>
-                <groupId>${alfresco.groupId}</groupId>
-                <artifactId>${alfresco.repo.artifactId}</artifactId>
-                <type>war</type>
-                <excludes />
-            </overlay>
-            <!-- other AMPs -->
-            <overlay>
-                <groupId>de.acosix.alfresco.utility</groupId>
-                <artifactId>de.acosix.alfresco.utility.repo</artifactId>
-                <type>amp</type>
-            </overlay>
-            <overlay>
-                <groupId>de.acosix.alfresco.audit</groupId>
-                <artifactId>de.acosix.alfresco.audit.repo</artifactId>
-                <type>amp</type>
-            </overlay>
-        </overlays>
+      <jdkHome>C:\Program Files\Java\jdk1.8.0_112</jdkHome>
     </configuration>
-</plugin>
+  </toolchain>
+  <toolchain>
+    <type>jdk</type>
+    <provides>
+      <version>1.7</version>
+      <vendor>oracle</vendor>
+    </provides>
+    <configuration>
+      <jdkHome>C:\Program Files\Java\jdk1.7.0_80</jdkHome>
+    </configuration>
+  </toolchain>
+</toolchains>
 ```
 
-For Alfresco SDK 3 beta users:
+The master branch requires Java 8.
 
-```xml
-<platformModules>
-     <moduleDependency>
-        <groupId>de.acosix.alfresco.utility</groupId>
-        <artifactId>de.acosix.alfresco.utility.repo</artifactId>
-        <version>1.0.2.0</version>
-        <type>amp</type>
-    </moduleDependency>
-    <moduleDependency>
-        <groupId>de.acosix.alfresco.audit</groupId>
-        <artifactId>de.acosix.alfresco.audit.repo</artifactId>
-        <version>1.0.0.0</version>
-        <type>amp</type>
-    </moduleDependency>
-</platformModules>
+## Docker-based integration tests
+
+In a default build using ```mvn clean install```, this project will build the extension for Alfresco Content Services, executing regular unit-tests without running integration tests. The integration tests of this project are based on Docker and require a Docker engine to run the necessary components (PostgreSQL database as well as Alfresco Content Services). Since a Docker engine may not be available in all environments of interested community members / collaborators, the integration tests have been made optional. A full build, including integration tests, can be run by executing
+
+```
+mvn clean install -Ddocker.tests.enabled=true
 ```
 
-# Other installation methods
+This project currently does not contain any integration tests, but may do so in the future.
 
-Using Maven to build the Alfresco WAR is the **recommended** approach to install this module. As an alternative it can be installed manually.
+## Dependencies
 
-## alfresco-mmt.jar / apply_amps
+This module depends on the following projects / libraries:
 
-The default Alfresco installer creates folders *amps* and *amps_share* where you can place AMP files for modules which Alfresco will install when you use the apply_amps script. Place the AMPs for the *de.acosix.alfresco.utility.repo* and *de.acosix.alfresco.audit.repo* modules in the *amps* directory and execute the script to install it. You must restart Alfresco for the installation to take effect.
+- Acosix Alfresco Utility (Apache License, Version 2.0) - core extension
 
-Alternatively you can use the alfresco-mmt.jar to install the module as [described in the documentation](http://docs.alfresco.com/5.1/concepts/dev-extensions-modules-management-tool.html).
+When the installable JAR produced by the build of this project is used for installation, the developer / user is responsible to either manually install all the required components / libraries provided by the listed projects, or use a build system to collect all relevant direct / transitive dependencies.
 
-## Manual "installation" using JAR files
+**Note**: The Acosix Alfresco Utility project is also built using templates from the Acosix Alfresco Maven project, and as such produces similar artifacts. Automatic resolution and collection of (transitive) dependencies using Maven / Gradle will resolve the Java *classes* JAR as a dependency, and **not** the installable (Simple Alfresco Module) variant. It is recommended to exclude Acosix Alfresco Utility from transitive resolution and instead include it directly / explicitly.
 
-Some addons and some other sources on the net suggest that you can install **any** addon by putting their JARs in a path like &lt;tomcat&gt;/lib, &lt;tomcat&gt;/shared or &lt;tomcat&gt;/shared/lib. This is **not** correct. Only the most trivial addons / extensions can be installed that way - "trivial" in this case means that these addons have no Java class-level dependencies on any component that Alfresco ships, e.g. addons that only consist of static resources, configuration files or web scripts using pure JavaScript / Freemarker.
-
-The only way to manually install an addon using JARs that is **guaranteed** not to cause Java classpath issues is by dropping the JAR files directly into the &lt;tomcat&gt;/webapps/alfresco/WEB-INF/lib (Repository-tier) or &lt;tomcat&gt;/webapps/share/WEB-INF/lib (Share-tier) folders.
-
-For this addon the following JARs need to be dropped into &lt;tomcat&gt;/webapps/alfresco/WEB-INF/lib:
-
- - de.acosix.alfresco.utility.common-&lt;version&gt;.jar
- - de.acosix.alfresco.utility.repo-&lt;version&gt;-installable.jar
- - de.acosix.alfresco.audit.repo-&lt;version&gt;-installable.jar
-
-If Alfresco has been setup by using the official installer, another, **explicitly recommended** way to install the module manually would be by dropping the JAR(s) into the &lt;alfresco&gt;/modules/platform (Repository-tier) or &lt;alfresco&gt;/modules/share (Share-tier) folders.
+**Note**: The feature to audit user login events requires the full extension of Acosix Alfresco Utility, which adds a patch to support more than one authentication listener to Alfresco.
