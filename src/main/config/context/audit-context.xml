@@ -24,10 +24,19 @@
     </bean>
 
     <bean class="${acosix.utility.common.package}.spring.PropertyAlteringBeanDefinitionRegistryPostProcessor">
+        <!-- use of dependsOn introduces a hard dependency to the full alfreco-utiltiy module -->
+        <!-- 
         <property name="dependsOn">
             <list>
                 <ref bean="acosix-utility.globalAuthenticationListener.listenersPatch" />
             </list>
+        </property>
+        -->
+        <!-- the condition at least let's us check if the full module is installed -->
+        <property name="condition">
+            <bean class="de.acosix.alfresco.utility.common.spring.condition.BeanDefinedCondition">
+                <property name="beanName" value="acosix-utility.globalAuthenticationListener.listenersPatch" />
+            </bean>
         </property>
         <property name="enabledPropertyKeys">
             <list>
@@ -37,7 +46,10 @@
         </property>
         <property name="propertiesSource" ref="global-properties" />
         <property name="targetBeanName" value="globalAuthenticationListener" />
+        <!-- due to lack of dependsOn, we can't be sure about ordering and verify this during execution (but condition and enabled keys make us certain it would be this class) -->
+        <!--
         <property name="expectedClassName" value="${acosix.utility.repo.package}.web.auth.AuthenticationListenersFacade" />
+         -->
         <property name="propertyName" value="authenticationListeners" />
         <property name="beanReferenceNameList">
             <list>
@@ -48,10 +60,19 @@
     </bean>
 
     <bean class="${acosix.utility.common.package}.spring.PropertyAlteringBeanDefinitionRegistryPostProcessor">
+        <!-- use of dependsOn introduces a hard dependency to the full alfreco-utiltiy module -->
+        <!--
         <property name="dependsOn">
             <list>
                 <ref bean="acosix-utility.webDavAuthenticationListener.listenersPatch" />
             </list>
+        </property>
+        -->
+        <!-- the condition at least let's us check if the full module is installed -->
+        <property name="condition">
+            <bean class="de.acosix.alfresco.utility.common.spring.condition.BeanDefinedCondition">
+                <property name="beanName" value="acosix-utility.webDavAuthenticationListener.listenersPatch" />
+            </bean>
         </property>
         <property name="enabledPropertyKeys">
             <list>
@@ -61,7 +82,10 @@
         </property>
         <property name="propertiesSource" ref="global-properties" />
         <property name="targetBeanName" value="webDavAuthenticationListener" />
+        <!-- due to lack of dependsOn, we can't be sure about ordering and verify this during execution (but condition and enabled keys make us certain it would be this class) -->
+        <!--
         <property name="expectedClassName" value="${acosix.utility.repo.package}.web.auth.AuthenticationListenersFacade" />
+         -->
         <property name="propertyName" value="authenticationListeners" />
         <property name="beanReferenceNameList">
             <list>
@@ -72,10 +96,19 @@
     </bean>
 
     <bean class="${acosix.utility.common.package}.spring.PropertyAlteringBeanDefinitionRegistryPostProcessor">
+        <!-- use of dependsOn introduces a hard dependency to the full alfreco-utiltiy module -->
+        <!--
         <property name="dependsOn">
             <list>
                 <ref bean="acosix-utility.sharepointAuthenticationListener.listenersPatch" />
             </list>
+        </property>
+        -->
+        <!-- the condition at least let's us check if the full module is installed -->
+        <property name="condition">
+            <bean class="de.acosix.alfresco.utility.common.spring.condition.BeanDefinedCondition">
+                <property name="beanName" value="acosix-utility.sharepointAuthenticationListener.listenersPatch" />
+            </bean>
         </property>
         <property name="enabledPropertyKeys">
             <list>
@@ -85,7 +118,10 @@
         </property>
         <property name="propertiesSource" ref="global-properties" />
         <property name="targetBeanName" value="sharepointAuthenticationListener" />
+        <!-- due to lack of dependsOn, we can't be sure about ordering and verify this during execution (but condition and enabled keys make us certain it would be this class) -->
+        <!--
         <property name="expectedClassName" value="${acosix.utility.repo.package}.web.auth.AuthenticationListenersFacade" />
+         -->
         <!-- no longer exists in Alfresco 6.0 -->
         <property name="failIfTargetBeanMissing" value="false" />
         <property name="propertyName" value="authenticationListeners" />
@@ -98,10 +134,19 @@
     </bean>
 
     <bean class="${acosix.utility.common.package}.spring.PropertyAlteringBeanDefinitionRegistryPostProcessor">
+        <!-- use of dependsOn introduces a hard dependency to the full alfreco-utiltiy module -->
+        <!--
         <property name="dependsOn">
             <list>
                 <ref bean="acosix-utility.webScriptAuthenticationListener.listenersPatch" />
             </list>
+        </property>
+        -->
+        <!-- the condition at least let's us check if the full module is installed -->
+        <property name="condition">
+            <bean class="de.acosix.alfresco.utility.common.spring.condition.BeanDefinedCondition">
+                <property name="beanName" value="acosix-utility.webScriptAuthenticationListener.listenersPatch" />
+            </bean>
         </property>
         <property name="enabledPropertyKeys">
             <list>
@@ -111,7 +156,10 @@
         </property>
         <property name="propertiesSource" ref="global-properties" />
         <property name="targetBeanName" value="webScriptAuthenticationListener" />
+        <!-- due to lack of dependsOn, we can't be sure about ordering and verify this during execution (but condition and enabled keys make us certain it would be this class) -->
+        <!--
         <property name="expectedClassName" value="${acosix.utility.repo.package}.web.auth.AuthenticationListenersFacade" />
+         -->
         <property name="propertyName" value="authenticationListeners" />
         <property name="beanReferenceNameList">
             <list>
