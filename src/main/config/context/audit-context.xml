@@ -24,7 +24,7 @@
     </bean>
 
     <bean class="${acosix.utility.common.package}.spring.PropertyAlteringBeanDefinitionRegistryPostProcessor">
-        <!-- use of dependsOn introduces a hard dependency to the full alfreco-utiltiy module -->
+        <!-- use of dependsOn introduces a hard dependency to the full alfreco-utility module -->
         <!-- 
         <property name="dependsOn">
             <list>
@@ -60,7 +60,7 @@
     </bean>
 
     <bean class="${acosix.utility.common.package}.spring.PropertyAlteringBeanDefinitionRegistryPostProcessor">
-        <!-- use of dependsOn introduces a hard dependency to the full alfreco-utiltiy module -->
+        <!-- use of dependsOn introduces a hard dependency to the full alfreco-utility module -->
         <!--
         <property name="dependsOn">
             <list>
@@ -96,7 +96,7 @@
     </bean>
 
     <bean class="${acosix.utility.common.package}.spring.PropertyAlteringBeanDefinitionRegistryPostProcessor">
-        <!-- use of dependsOn introduces a hard dependency to the full alfreco-utiltiy module -->
+        <!-- use of dependsOn introduces a hard dependency to the full alfreco-utility module -->
         <!--
         <property name="dependsOn">
             <list>
@@ -134,7 +134,7 @@
     </bean>
 
     <bean class="${acosix.utility.common.package}.spring.PropertyAlteringBeanDefinitionRegistryPostProcessor">
-        <!-- use of dependsOn introduces a hard dependency to the full alfreco-utiltiy module -->
+        <!-- use of dependsOn introduces a hard dependency to the full alfreco-utility module -->
         <!--
         <property name="dependsOn">
             <list>
