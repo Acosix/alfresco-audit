@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/Acosix/alfresco-audit.svg?branch=master)](https://travis-ci.org/Acosix/alfresco-audit)
-
 # About
 
 This addon aims to provide some general use functionality and utilities relating to the Auditing feature within Alfresco Content Services.

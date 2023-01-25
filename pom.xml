@@ -21,7 +21,7 @@
     <parent>
         <groupId>de.acosix.alfresco.maven</groupId>
         <artifactId>de.acosix.alfresco.maven.project.parent-5.0.d</artifactId>
-        <version>1.3.1-SNAPSHOT</version>
+        <version>1.4.1</version>
     </parent>
 
     <groupId>de.acosix.alfresco.audit</groupId>
@@ -72,7 +72,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
-        <utility.version>1.1.1</utility.version>
+        <utility.version>1.1.0</utility.version>
         <acosix.utility.common.package>de.acosix.alfresco.utility.common</acosix.utility.common.package>
         <acosix.utility.repo.package>de.acosix.alfresco.utility.repo</acosix.utility.repo.package>
     </properties>
