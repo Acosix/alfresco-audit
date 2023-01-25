@@ -1,0 +1,2 @@
+FROM ${docker.tests.repositoryBaseImage}
+COPY maven ${docker.tests.repositoryWebappPath}

@@ -20,7 +20,7 @@
 
     <parent>
         <groupId>de.acosix.alfresco.maven</groupId>
-        <artifactId>de.acosix.alfresco.maven.project.parent-5.0.d</artifactId>
+        <artifactId>de.acosix.alfresco.maven.project.parent-6.0.7</artifactId>
         <version>1.4.1</version>
     </parent>
 
@@ -68,10 +68,6 @@
         <messages.packageId>acosix.audit</messages.packageId>
         <moduleId>acosix-audit</moduleId>
 
-        <!-- Java 7 is out of support -->
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-
         <utility.version>1.1.0</utility.version>
         <acosix.utility.common.package>de.acosix.alfresco.utility.common</acosix.utility.common.package>
         <acosix.utility.repo.package>de.acosix.alfresco.utility.repo</acosix.utility.repo.package>
@@ -95,6 +91,14 @@
                 <version>${utility.version}</version>
                 <scope>provided</scope>
             </dependency>
+
+            <dependency>
+                <groupId>de.acosix.alfresco.utility</groupId>
+                <artifactId>de.acosix.alfresco.utility.core.repo</artifactId>
+                <version>${utility.version}</version>
+                <classifier>installable</classifier>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -108,5 +112,24 @@
             <groupId>de.acosix.alfresco.utility</groupId>
             <artifactId>de.acosix.alfresco.utility.core.repo</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>de.acosix.alfresco.utility</groupId>
+            <artifactId>de.acosix.alfresco.utility.core.repo</artifactId>
+            <classifier>installable</classifier>
+        </dependency>
     </dependencies>
+
+    <build>
+
+        <plugins>
+            <!-- Explicitly enable Docker use (can't be done in Acosix parent POM without enabling it for all POMs,
+                even if Docker use is not relevant, e.g. in intermediate parent POMs) -->
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+
+	</build>
 </project>
