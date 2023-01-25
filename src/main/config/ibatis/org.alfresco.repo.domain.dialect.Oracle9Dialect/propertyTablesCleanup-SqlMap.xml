@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+ Copyright 2017 - 2020 Acosix GmbH
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ -->
+<mapper namespace="propertyTableCleanup">
+
+    <!-- use rownum-based pagination as Oracle 11g does not support "fetch first x rows" -->
+    <!-- (Oracle 11g may be relevant still on Alfresco 4.2) -->
+
+    <select id="select_maxPropertyRootId" resultType="java.lang.Long" useCache="false">
+        select
+            max(pr.id)
+        from
+            alf_prop_root pr
+    </select>
+
+    <select id="select_maxPropertyValueId" resultType="java.lang.Long" useCache="false">
+        select
+            max(pv.id)
+        from
+            alf_prop_value pv
+    </select>
+
+    <select id="select_maxPropertyDoubleValueId" resultType="java.lang.Long" useCache="false">
+        select
+            max(pdv.id)
+        from
+            alf_prop_double_value pdv
+    </select>
+
+    <select id="select_maxPropertyStringValueId" resultType="java.lang.Long" useCache="false">
+        select
+            max(psv.id)
+        from
+            alf_prop_string_value psv
+    </select>
+
+    <select id="select_maxPropertySerializableValueId" resultType="java.lang.Long" useCache="false">
+        select
+            max(psv.id)
+        from
+            alf_prop_serializable_value psv
+    </select>
+
+    <select id="select_existingPropertyRootIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            pr.id
+        from
+            alf_prop_root pr
+        <if test="fromId != null || maxItems != null">
+        where
+            <if test="fromId != null">
+            pr.id &gt; #{fromId}
+                <if test="maxItems != null">
+                and
+                </if>
+            </if>
+            <if test="maxItems != null">
+            rownum &lt;= #{maxItems}
+            </if>
+        </if>
+      order by pr.id asc
+    </select>
+   
+    <select id="select_existingPropertyValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            pv.id
+        from
+            alf_prop_value pv
+        <if test="fromId != null || maxItems != null">
+        where
+            <if test="fromId != null">
+            pv.id &gt; #{fromId}
+                <if test="maxItems != null">
+                and
+                </if>
+            </if>
+            <if test="maxItems != null">
+            rownum &lt;= #{maxItems}
+            </if>
+        </if>
+      order by pv.id asc
+    </select>
+
+    <select id="select_existingPropertyDoubleValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            pdv.id
+        from
+            alf_prop_double_value pdv
+        <if test="fromId != null || maxItems != null">
+        where
+            <if test="fromId != null">
+            pdv.id &gt; #{fromId}
+               <if test="maxItems != null">
+               and
+               </if>
+            </if>
+            <if test="maxItems != null">
+            rownum &lt;= #{maxItems}
+            </if>
+        </if>
+        order by pdv.id asc
+    </select>
+
+    <select id="select_existingPropertyStringValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            psv.id
+        from
+            alf_prop_string_value psv
+        <if test="fromId != null || maxItems != null">
+        where
+            <if test="fromId != null">
+            psv.id &gt; #{fromId}
+               <if test="maxItems != null">
+               and
+               </if>
+            </if>
+            <if test="maxItems != null">
+            rownum &lt;= #{maxItems}
+            </if>
+        </if>
+        order by psv.id asc
+    </select>
+
+    <select id="select_existingPropertySerializableValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            psv.id
+        from
+            alf_prop_serializable_value psv
+        <if test="fromId != null || maxItems != null">
+        where
+            <if test="fromId != null">
+            psv.id &gt; #{fromId}
+               <if test="maxItems != null">
+               and
+               </if>
+            </if>
+            <if test="maxItems != null">
+            rownum &lt;= #{maxItems}
+            </if>
+        </if>
+        order by psv.id asc
+    </select>
+
+    <select id="select_usedAuditValues" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            distinct ae.audit_values_id
+        from
+            alf_audit_entry ae
+        <if test="fromId != null || toId != null">
+        where
+            <if test="fromId != null">
+            ae.audit_values_id &gt;= #{fromId}
+                <if test="toId != null">
+                and
+                </if>
+            </if>
+            <if test="toId != null">
+            ae.audit_values_id &lt;= #{toId}
+            </if>
+        </if>
+    </select>
+
+    <select id="select_usedAuditUsers" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            distinct ae.audit_user_id
+        from
+            alf_audit_entry ae
+        <if test="fromId != null || toId != null">
+        where
+            <if test="fromId != null">
+            ae.audit_user_id &gt;= #{fromId}
+                <if test="toId != null">
+                and
+                </if>
+            </if>
+            <if test="toId != null">
+            ae.audit_user_id &lt;= #{toId}
+            </if>
+        </if>
+    </select>
+
+    <select id="select_usedAuditAppNames" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            distinct aa.app_name_id
+        from
+            alf_audit_app aa
+        <if test="fromId != null || toId != null">
+        where
+            <if test="fromId != null">
+            aa.app_name_id &gt;= #{fromId}
+                <if test="toId != null">
+                and
+                </if>
+            </if>
+            <if test="toId != null">
+            aa.app_name_id &lt;= #{toId}
+            </if>
+        </if>
+    </select>
+
+    <select id="select_usedAuditAppDisabledPaths" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            distinct aa.disabled_paths_id
+        from
+            alf_audit_app aa
+        <if test="fromId != null || toId != null">
+        where
+            <if test="fromId != null">
+            aa.disabled_paths_id &gt;= #{fromId}
+                <if test="toId != null">
+                and
+                </if>
+            </if>
+            <if test="toId != null">
+            aa.disabled_paths_id &lt;= #{toId}
+            </if>
+        </if>
+    </select>
+
+    <select id="select_usedPropLinkKeys" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            distinct pl.key_prop_id
+        from
+            alf_prop_link pl
+        <if test="fromId != null || toId != null">
+        where
+            <if test="fromId != null">
+            pl.key_prop_id &gt;= #{fromId}
+                <if test="toId != null">
+                and
+                </if>
+            </if>
+            <if test="toId != null">
+            pl.key_prop_id &lt;= #{toId}
+            </if>
+        </if>
+    </select>
+
+    <select id="select_usedPropLinkValues" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            distinct pl.value_prop_id
+        from
+            alf_prop_link pl
+        <if test="fromId != null || toId != null">
+        where
+            <if test="fromId != null">
+            pl.value_prop_id &gt;= #{fromId}
+                <if test="toId != null">
+                and
+                </if>
+            </if>
+            <if test="toId != null">
+            pl.value_prop_id &lt;= #{toId}
+            </if>
+        </if>
+    </select>
+
+    <select id="select_usedUniqueContextProps" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            distinct puc.prop1_id
+        from
+            alf_prop_unique_ctx puc
+        <if test="fromId != null || toId != null">
+        where
+            <if test="fromId != null">
+            puc.prop1_id &gt;= #{fromId}
+                <if test="toId != null">
+                and
+                </if>
+            </if>
+            <if test="toId != null">
+            puc.prop1_id &lt;= #{toId}
+            </if>
+        </if>
+    </select>
+
+    <select id="select_usedUniqueContextValues1" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            distinct puc.value1_prop_id
+        from
+            alf_prop_unique_ctx puc
+        <if test="fromId != null || toId != null">
+        where
+            <if test="fromId != null">
+            puc.value1_prop_id &gt;= #{fromId}
+                <if test="toId != null">
+                and
+                </if>
+            </if>
+            <if test="toId != null">
+            puc.value1_prop_id &lt;= #{toId}
+            </if>
+        </if>
+    </select>
+
+    <select id="select_usedUniqueContextValues2" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            distinct puc.value2_prop_id
+        from
+            alf_prop_unique_ctx puc
+        <if test="fromId != null || toId != null">
+        where
+            <if test="fromId != null">
+            puc.value2_prop_id &gt;= #{fromId}
+                <if test="toId != null">
+                and
+                </if>
+            </if>
+            <if test="toId != null">
+            puc.value2_prop_id &lt;= #{toId}
+            </if>
+        </if>
+    </select>
+
+    <select id="select_usedUniqueContextValues3" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            distinct puc.value3_prop_id
+        from
+            alf_prop_unique_ctx puc
+        <if test="fromId != null || toId != null">
+        where
+            <if test="fromId != null">
+            puc.value3_prop_id &gt;= #{fromId}
+                <if test="toId != null">
+                and
+                </if>
+            </if>
+            <if test="toId != null">
+            puc.value3_prop_id &lt;= #{toId}
+            </if>
+        </if>
+    </select>
+
+    <select id="select_usedPropertyDoubleValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            distinct pv.long_value
+        from
+            alf_prop_value pv
+        where
+            pv.persisted_type = 2
+        <if test="fromId != null || toId != null">
+        and
+            <if test="fromId != null">
+            pv.long_value &gt;= #{fromId}
+                <if test="toId != null">
+                and
+                </if>
+            </if>
+            <if test="toId != null">
+            pv.long_value &lt;= #{toId}
+            </if>
+        </if>
+    </select>
+
+    <select id="select_usedPropertyStringValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            distinct pv.long_value
+        from
+            alf_prop_value pv
+        where
+            pv.persisted_type in (3,5,6)
+        <if test="fromId != null || toId != null">
+        and
+            <if test="fromId != null">
+            pv.long_value &gt;= #{fromId}
+                <if test="toId != null">
+                and
+                </if>
+            </if>
+            <if test="toId != null">
+            pv.long_value &lt;= #{toId}
+            </if>
+        </if>
+    </select>
+
+    <select id="select_usedPropertySerializableValueIds" parameterType="CleanupQueryBounds" resultType="java.lang.Long" useCache="false">
+        select
+            distinct pv.long_value
+        from
+            alf_prop_value pv
+        where
+            pv.persisted_type = 4
+        <if test="fromId != null || toId != null">
+            and
+            <if test="fromId != null">
+            pv.long_value &gt;= #{fromId}
+                <if test="toId != null">
+                and
+                </if>
+            </if>
+            <if test="toId != null">
+            pv.long_value &lt;= #{toId}
+            </if>
+        </if>
+    </select>
+
+    <delete id="delete_unusedPropertyRoots" parameterType="list">
+        delete
+        from
+            alf_prop_root
+        where
+            id in
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <delete id="delete_unusedPropertyValues" parameterType="list">
+        delete
+        from
+            alf_prop_value
+        where
+            id in
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <delete id="delete_unusedPropertyDoubleValues" parameterType="list">
+        delete
+        from
+            alf_prop_double_value
+        where
+            id in
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <delete id="delete_unusedPropertyStringValues" parameterType="list">
+        delete
+        from
+            alf_prop_string_value
+        where
+            id in
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <delete id="delete_unusedPropertySerializableValues" parameterType="list">
+        delete
+        from
+            alf_prop_serializable_value
+        where
+            id in
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+</mapper>
