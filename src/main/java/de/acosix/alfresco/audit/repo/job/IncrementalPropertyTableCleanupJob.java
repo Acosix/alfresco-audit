@@ -69,7 +69,7 @@ public abstract class IncrementalPropertyTableCleanupJob implements GenericJob
         {
             logger.debug("Running incremental cleanup");
             AuthenticationUtil.runAsSystem(() -> {
-                JobUtilities.runWithJobLock(context, lockQName, (lockReleaseCheck) -> {
+                JobUtilities.runWithJobLock(context, lockQName, lockReleaseCheck -> {
                     final TransactionService transactionService = JobUtilities.getJobDataValue(context, "transactionService",
                             TransactionService.class);
                     final RetryingTransactionHelper retryingTransactionHelper = transactionService.getRetryingTransactionHelper();
@@ -169,7 +169,7 @@ public abstract class IncrementalPropertyTableCleanupJob implements GenericJob
         final Long lastId = DefaultTypeConverter.INSTANCE.convert(Long.class, attribute);
 
         this.getLogger().info(
-                "Running incremental cleanup from last ID {} with batchSize {}, workerCount {}, idsPerWorkrItem {} and checkItemsLimit {}",
+                "Running incremental cleanup from last ID {} with batchSize {}, workerCount {}, idsPerWorkItem {} and checkItemsLimit {}",
                 lastId, batchSizeStr, workerCountStr, idsPerWorkItemStr, checkItemsLimitStr);
 
         final EntryIdsWorkProvider workProvider = new EntryIdsWorkProvider(this, propertyTablesCleanupDAO, workerCount, batchSize,
