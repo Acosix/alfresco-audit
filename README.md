@@ -121,6 +121,29 @@ This module depends on the following projects / libraries:
 
 When the installable JAR produced by the build of this project is used for installation, the developer / user is responsible to either manually install all the required components / libraries provided by the listed projects, or use a build system to collect all relevant direct / transitive dependencies.
 
+An example with all dependencies and the artefacts delivered as amps looks like this in the pom.xml file in the *-platform-docker project.
+
+```xml
+...
+  <dependency>
+    ...
+    <dependency>
+        <groupId>de.acosix.alfresco.utility</groupId>
+        <artifactId>de.acosix.alfresco.utility.core.repo</artifactId>
+        <version>1.3.2</version>
+        <type>amp</type>
+    </dependency>
+    <dependency>
+        <groupId>de.acosix.alfresco.audit</groupId>
+        <artifactId>de.acosix.alfresco.audit.repo</artifactId>
+        <version>1.1.0</version>
+        <type>amp</type>
+    </dependency> 
+    ...
+  </dependencies>
+  ...
+```
+
 **Note**: The Acosix Alfresco Utility project is also built using templates from the Acosix Alfresco Maven project, and as such produces similar artifacts. Automatic resolution and collection of (transitive) dependencies using Maven / Gradle will resolve the Java *classes* JAR as a dependency, and **not** the installable (Simple Alfresco Module) variant. It is recommended to exclude Acosix Alfresco Utility from transitive resolution and instead include it directly / explicitly.
 
 **Note**: The feature to audit user login events requires the full extension of Acosix Alfresco Utility, which adds a patch to support more than one authentication listener to Alfresco.
