@@ -124,21 +124,6 @@
                 <scope>test</scope>
             </dependency>
 
-            <!-- relevant to support vm: transport for non-AMQ-Docker setup -->
-            <!-- transitive dependencies are already part of ACS -->
-            <dependency>
-                <groupId>org.apache.activemq</groupId>
-                <artifactId>activemq-broker</artifactId>
-                <version>${activemq.version}</version>
-                <scope>test</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>*</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
         </dependencies>
     </dependencyManagement>
 
@@ -166,11 +151,6 @@
             <type>amp</type>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-broker</artifactId>
-        </dependency>
-
     </dependencies>
 
     <build>
@@ -196,6 +176,36 @@
                 <docker.tests.repository.postRun>USER alfresco</docker.tests.repository.postRun>
                 <docker.tests.repository.versionSpecificJavaOpts><![CDATA[-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:${docker.tests.repository.debugPort} -Dencryption.keystore.type=JCEKS -Dencryption.cipherAlgorithm=DESede/CBC/PKCS5Padding -Dencryption.keyAlgorithm=DESede -Dencryption.keystore.location=${docker.tests.repository.tomcatPath}/shared/classes/alfresco/extension/keystore/keystore -Dmetadata-keystore.password=mp6yc0UD9e -Dmetadata-keystore.aliases=metadata -Dmetadata-keystore.metadata.password=oKIWzVdEdA -Dmetadata-keystore.metadata.algorithm=DESede]]></docker.tests.repository.versionSpecificJavaOpts>
             </properties>
+
+            <dependencyManagement>
+                <dependencies>
+
+                    <!-- relevant to support vm: transport for non-AMQ-Docker setup -->
+                    <!-- transitive dependencies are already part of ACS -->
+                    <dependency>
+                        <groupId>org.apache.activemq</groupId>
+                        <artifactId>activemq-broker</artifactId>
+                        <version>${activemq.version}</version>
+                        <scope>test</scope>
+                        <exclusions>
+                            <exclusion>
+                                <groupId>*</groupId>
+                                <artifactId>*</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </dependency>
+
+                </dependencies>
+            </dependencyManagement>
+
+            <dependencies>
+
+                <dependency>
+                    <groupId>org.apache.activemq</groupId>
+                    <artifactId>activemq-broker</artifactId>
+                </dependency>
+
+            </dependencies>
         </profile>
     </profiles>
 </project>
