@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+
+    ${moduleId}-postgres:
+        image: ${docker.tests.postgresql.image}
+        networks:
+          ${moduleId}-network:
+            aliases:
+              - postgres
+        restart: unless-stopped
+        command: postgres -c max_connections=300
+        volumes:
+          - ${moduleId}-alf_psql:/srv/postgresql
+        environment:
+            PGDATA: /srv/postgresql/data
+            POSTGRES_DB: alfresco
+            POSTGRES_USER: alfresco
+            POSTGRES_PASSWORD: alfresco
+
+    ${moduleId}-repository:
+        image: ${moduleId}-repository:latest
+        build:
+            context: ./repository
+            dockerfile: Dockerfile
+        networks:
+          ${moduleId}-network:
+            aliases:
+              - repository 
+        restart: unless-stopped
+        depends_on:
+          ${moduleId}-postgres:
+            condition: service_started
+        volumes:
+          - ${moduleId}-contentstore:${docker.tests.repository.dataPath}
+          - ${moduleId}-repo_logs:${docker.tests.repository.tomcatPath}/logs
+        ports:
+          - ${docker.tests.repository.port}:8080
+          - ${docker.tests.repository.debugPort}:8888
+        environment:
+            JAVA_OPTS: >-
+              -Xms1536m -Xmx1536m -XX:+UseG1GC -XX:+ParallelRefProcEnabled
+              -XX:+UseStringDeduplication -XX:+ScavengeBeforeFullGC
+              -XX:+DisableExplicitGC -XX:+AlwaysPreTouch
+              ${docker.tests.repository.versionSpecificJavaOpts}
+              -Dfile.encoding=UTF-8
+              -Djava.net.preferIPv4Stack=true
+        healthcheck:
+            test: curl -f localhost:8080/alfresco/
+            interval: 15s
+            timeout: 15s
+            retries: 6
+
+networks:
+    ${moduleId}-network:
+
+volumes:
+    ${moduleId}-alf_psql:
+    ${moduleId}-contentstore:
+    ${moduleId}-repo_logs:

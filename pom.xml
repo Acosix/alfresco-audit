@@ -21,12 +21,12 @@
     <parent>
         <groupId>de.acosix.alfresco.maven</groupId>
         <artifactId>de.acosix.alfresco.maven.project.parent-6.0.7</artifactId>
-        <version>1.4.1</version>
+        <version>1.6.0</version>
     </parent>
 
     <groupId>de.acosix.alfresco.audit</groupId>
     <artifactId>de.acosix.alfresco.audit.repo</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Acosix Alfresco Audit - Repository Module</name>
@@ -68,37 +68,77 @@
         <messages.packageId>acosix.audit</messages.packageId>
         <moduleId>acosix-audit</moduleId>
 
-        <utility.version>1.1.0</utility.version>
+        <acosix.utility.version>1.5.0</acosix.utility.version>
         <acosix.utility.common.package>de.acosix.alfresco.utility.common</acosix.utility.common.package>
         <acosix.utility.repo.package>de.acosix.alfresco.utility.repo</acosix.utility.repo.package>
+
+        <ootbee.support-tools.version>1.2.3.0</ootbee.support-tools.version>
+
+        <docker.tests.repository.dependency.artifactIds>de.acosix.alfresco.utility.core.repo,support-tools-repo</docker.tests.repository.dependency.artifactIds>
     </properties>
 
     <repositories>
         <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>central-snapshots</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
         </repository>
     </repositories>
 
+    <distributionManagement>
+        <repository>
+            <id>central</id>
+            <url>https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/</url>
+        </repository>
+        <snapshotRepository>
+            <id>central</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>de.acosix.alfresco.utility</groupId>
                 <artifactId>de.acosix.alfresco.utility.core.repo</artifactId>
-                <version>${utility.version}</version>
+                <version>${acosix.utility.version}</version>
                 <scope>provided</scope>
             </dependency>
 
             <dependency>
                 <groupId>de.acosix.alfresco.utility</groupId>
                 <artifactId>de.acosix.alfresco.utility.core.repo</artifactId>
-                <version>${utility.version}</version>
-                <classifier>installable</classifier>
+                <version>${acosix.utility.version}</version>
+                <type>amp</type>
                 <scope>test</scope>
             </dependency>
+
+            <dependency>
+                <groupId>org.orderofthebee.support-tools</groupId>
+                <artifactId>support-tools-repo</artifactId>
+                <version>${ootbee.support-tools.version}</version>
+                <type>amp</type>
+                <classifier>amp</classifier>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- relevant to support vm: transport for non-AMQ-Docker setup -->
+            <!-- transitive dependencies are already part of ACS -->
+            <dependency>
+                <groupId>org.apache.activemq</groupId>
+                <artifactId>activemq-broker</artifactId>
+                <version>${activemq.version}</version>
+                <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -116,20 +156,46 @@
         <dependency>
             <groupId>de.acosix.alfresco.utility</groupId>
             <artifactId>de.acosix.alfresco.utility.core.repo</artifactId>
-            <classifier>installable</classifier>
+            <type>amp</type>
         </dependency>
+
+        <dependency>
+            <groupId>org.orderofthebee.support-tools</groupId>
+            <artifactId>support-tools-repo</artifactId>
+            <classifier>amp</classifier>
+            <type>amp</type>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-broker</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
-
         <plugins>
-            <!-- Explicitly enable Docker use (can't be done in Acosix parent POM without enabling it for all POMs,
-                even if Docker use is not relevant, e.g. in intermediate parent POMs) -->
             <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
             </plugin>
         </plugins>
+    </build>
 
-	</build>
+    <profiles>
+        <profile>
+            <id>test-acs-23</id>
+
+            <properties>
+                <docker.tests.repository.base>alfresco/alfresco-content-repository-community:23.1.0</docker.tests.repository.base>
+                <docker.tests.repository.dependency.artifactIds>de.acosix.alfresco.utility.core.repo,support-tools-repo,activemq-broker</docker.tests.repository.dependency.artifactIds>
+                <activemq.version>6.0.1</activemq.version>
+
+                <docker.tests.repository.chown.mask>alfresco:Alfresco</docker.tests.repository.chown.mask>
+                <docker.tests.repository.preRun>USER root</docker.tests.repository.preRun>
+                <docker.tests.repository.postRun>USER alfresco</docker.tests.repository.postRun>
+                <docker.tests.repository.versionSpecificJavaOpts><![CDATA[-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:${docker.tests.repository.debugPort} -Dencryption.keystore.type=JCEKS -Dencryption.cipherAlgorithm=DESede/CBC/PKCS5Padding -Dencryption.keyAlgorithm=DESede -Dencryption.keystore.location=${docker.tests.repository.tomcatPath}/shared/classes/alfresco/extension/keystore/keystore -Dmetadata-keystore.password=mp6yc0UD9e -Dmetadata-keystore.aliases=metadata -Dmetadata-keystore.metadata.password=oKIWzVdEdA -Dmetadata-keystore.metadata.algorithm=DESede]]></docker.tests.repository.versionSpecificJavaOpts>
+            </properties>
+        </profile>
+    </profiles>
 </project>
