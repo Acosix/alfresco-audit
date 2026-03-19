@@ -94,9 +94,9 @@ public class AuditApplicationCleanupJob implements GenericJob
         final ZoneId zone = ZoneId.of(timezoneStr != null ? timezoneStr : "Z");
         final ZonedDateTime now = LocalDateTime.now(ZoneId.of("Z")).atZone(zone);
         final ZonedDateTime cutOffDate = now.minus(cutOffPeriod);
-        final long epochSecond = cutOffDate.toEpochSecond();
+        final long epochMillis = cutOffDate.toInstant().toEpochMilli();
 
         LOGGER.debug("Clearing all audit entries of application {} until {}", auditApplicationName, cutOffDate);
-        auditService.clearAudit(auditApplicationName, null, Long.valueOf(epochSecond));
+        auditService.clearAudit(auditApplicationName, null, Long.valueOf(epochMillis));
     }
 }
