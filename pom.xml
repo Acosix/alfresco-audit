@@ -75,6 +75,9 @@
         <ootbee.support-tools.version>1.2.3.0</ootbee.support-tools.version>
 
         <docker.tests.repository.dependency.artifactIds>de.acosix.alfresco.utility.core.repo,support-tools-repo</docker.tests.repository.dependency.artifactIds>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>17</maven.compiler.release>
     </properties>
 
     <repositories>

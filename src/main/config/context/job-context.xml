@@ -25,6 +25,7 @@
             <list>
                 <ref bean="${moduleId}-ConsolidateActiveUsersAuditJobTrigger" />
                 <ref bean="${moduleId}-ActiveUserLoginCleanupJobTrigger" />
+                <ref bean="${moduleId}-ApplicationsCleanupJobTrigger" />
                 <ref bean="${moduleId}-ActiveUsersCleanupJobTrigger" />
                 <ref bean="${moduleId}-PropertyRootsCleanupJobTrigger" />
                 <ref bean="${moduleId}-PropertyValuesCleanupJobTrigger" />
@@ -208,6 +209,32 @@
                         <entry key="idsPerWorkItem" value="\${${moduleId}.propertySerializableValuesCleanup.idsPerWorkItem}" />
                         <entry key="workerCount" value="\${${moduleId}.propertySerializableValuesCleanup.workerCount}" />
                         <entry key="checkItemsLimit" value="\${${moduleId}.propertySerializableValuesCleanup.checkItemsLimit}" />
+                    </map>
+                </property>
+            </bean>
+        </property>
+    </bean>
+    
+    <bean id="${moduleId}-ApplicationsCleanupJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="cronExpression" value="\${${moduleId}.job.applicationsCleanUp.cron}" />
+        <!-- system.cronJob.startDelayMilliseconds is only available in 6.0+, so we need the default value to be 5.x compatible -->
+        <property name="startDelay" value="$${system.cronJob.startDelayMilliseconds:60000}" />
+        <property name="jobDetail">
+            <bean id="${moduleId}-ApplicationsCleanupJob" class="${acosix.utility.repo.package}.job.GenericJobDetailsFactoryBean">
+                <property name="jobClass" value="${project.artifactId}.job.AuditApplicationsCleanupJob" />
+                <property name="jobDataAsMap">
+                    <map>
+                        <entry key="enabled" value="\${${moduleId}.job.applicationsCleanUp.enabled:false}" />
+                        <entry key="transactionService" value-ref="TransactionService" />
+                        <entry key="jobLockService" value-ref="JobLockService" />
+                        <entry key="auditService" value-ref="AuditService" />
+                        <entry key="cutOffPeriod" value="\${${moduleId}.job.applicationsCleanUp.cutOffPeriod}" />
+                        <entry key="timezone" value="\${${moduleId}.job.applicationsCleanUp.timezone}" />
+                        <entry key="targetApplications">
+				            <list>
+				                <value>#{'${acosix-audit.job.applicationsCleanUp.appNames}'.split(',')}</value>
+				            </list>
+				        </entry>
                     </map>
                 </property>
             </bean>
