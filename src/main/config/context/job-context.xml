@@ -218,7 +218,7 @@
     <bean id="${moduleId}-ApplicationsCleanupJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
         <property name="cronExpression" value="\${${moduleId}.job.applicationsCleanUp.cron}" />
         <!-- system.cronJob.startDelayMilliseconds is only available in 6.0+, so we need the default value to be 5.x compatible -->
-        <property name="startDelay" value="$${system.cronJob.startDelayMilliseconds:60000}" />
+        <property name="startDelay" value="${system.cronJob.startDelayMilliseconds:60000}" />
         <property name="jobDetail">
             <bean id="${moduleId}-ApplicationsCleanupJob" class="${acosix.utility.repo.package}.job.GenericJobDetailsFactoryBean">
                 <property name="jobClass" value="${project.artifactId}.job.AuditApplicationsCleanupJob" />
@@ -230,11 +230,8 @@
                         <entry key="auditService" value-ref="AuditService" />
                         <entry key="cutOffPeriod" value="\${${moduleId}.job.applicationsCleanUp.cutOffPeriod}" />
                         <entry key="timezone" value="\${${moduleId}.job.applicationsCleanUp.timezone}" />
-                        <entry key="targetApplications">
-				            <list>
-				                <value>#{'${acosix-audit.job.applicationsCleanUp.appNames}'.split(',')}</value>
-				            </list>
-				        </entry>
+                        <entry key="targetApplications" value="\${${moduleId}.job.applicationsCleanUp.appNames}" />
+                        <entry key="processAllKnownApps" value="\${${moduleId}.job.applicationsCleanUp.processAllKnownApps:false}" />
                     </map>
                 </property>
             </bean>
