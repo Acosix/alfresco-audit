@@ -19,6 +19,8 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -30,7 +32,7 @@ import org.alfresco.repo.transaction.RetryingTransactionHelper;
 import org.alfresco.service.cmr.audit.AuditService;
 import org.alfresco.service.namespace.QName;
 import org.alfresco.service.transaction.TransactionService;
-import org.quartz.JobExecutionContext;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,11 +41,10 @@ import de.acosix.alfresco.utility.repo.job.GenericJob;
 import de.acosix.alfresco.utility.repo.job.JobUtilities;
 
 /**
- * Instances of this job cleanup data from audit applications that
- * are older than a configured cut-off period.
+ * Instances of this job cleanup data from audit applications that are older
+ * than a configured cut-off period.
  *
- * @author Piergiorgio Lucidi, <a href="https://www.ziaconsulting.com/">Zia
- *         Consulting</a>
+ * @author Piergiorgio Lucidi, <a href="https://www.ziaconsulting.com/">Zia Consulting</a>
  * @author Axel Faust, <a href="http://acosix.de">Acosix GmbH</a>
  */
 public class AuditApplicationsCleanupJob implements GenericJob {
@@ -53,14 +54,15 @@ public class AuditApplicationsCleanupJob implements GenericJob {
 	private static final QName LOCK_QNAME = QName.createQName(AuditModuleConstants.SERVICE_NAMESPACE,
 			AuditApplicationsCleanupJob.class.getSimpleName());
 
-	private static final String ALL_APPS_PROP_VALUE = "ALL";
 	private static final String AUDIT_SERVICE_ENTRY = "auditService";
 	private static final String CUTOFF_ENTRY = "cutOffPeriod";
 	private static final String TIMEZONE_ENTRY = "timezone";
 	private static final String TARGET_APPS_ENTRY = "targetApplications";
+	private static final String PROCESS_ALL_KNOWN_APPS_ENTRY = "processAllKnownApps";
 	private static final String DEFAULT_TIMEZONE = "Z";
 	private static final String ENABLED_ENTRY = "enabled";
-	
+	private static final String COMMA = ",";
+
 	/**
 	 *
 	 * {@inheritDoc}
@@ -91,25 +93,35 @@ public class AuditApplicationsCleanupJob implements GenericJob {
 	}
 
 	protected void cleanupAuditData(final Object context) {
-		//Check the enable flag first
-	    boolean enabled = Boolean.parseBoolean(JobUtilities.getJobDataValue(context, ENABLED_ENTRY, String.class));
-	    if (!enabled) {
-	        LOGGER.info("Audit Applications Cleanup Job is disabled via configuration. Skipping.");
-	        return;
-	    }
-	    
-		final AuditService auditService = JobUtilities.getJobDataValue(context, AUDIT_SERVICE_ENTRY, AuditService.class);
-		final String cutOffPeriodStr = JobUtilities.getJobDataValue(context, CUTOFF_ENTRY, String.class);
-		final String timezoneStr = JobUtilities.getJobDataValue(context, TIMEZONE_ENTRY, String.class, false);
-		List<String> targetApplications = getJobList(context, TARGET_APPS_ENTRY, String.class);
-
-		if (!targetApplications.isEmpty() && targetApplications.contains(ALL_APPS_PROP_VALUE)) {
-			Set<String> auditApplications = auditService.getAuditApplications().keySet();
-			targetApplications = auditApplications.stream().sorted().toList();
+		// Check the enable flag first
+		boolean enabled = Boolean.parseBoolean(JobUtilities.getJobDataValue(context, ENABLED_ENTRY, String.class));
+		if (!enabled) {
+			LOGGER.info("Audit Applications Cleanup Job is disabled via configuration. Skipping.");
+			return;
 		}
 
-		for (String targetApplication : targetApplications) {
-			LOGGER.debug("Audit Applications Cleanup Job - Running cleanup of outdated data in audit application {}", targetApplication);
+		final AuditService auditService = JobUtilities.getJobDataValue(context, AUDIT_SERVICE_ENTRY,
+				AuditService.class);
+		final String cutOffPeriodStr = JobUtilities.getJobDataValue(context, CUTOFF_ENTRY, String.class);
+		final String timezoneStr = JobUtilities.getJobDataValue(context, TIMEZONE_ENTRY, String.class, false);
+		final String targetApplicationsStr = JobUtilities.getJobDataValue(context, TARGET_APPS_ENTRY, String.class);
+		final String processAllKnownAppsStr = JobUtilities.getJobDataValue(context, PROCESS_ALL_KNOWN_APPS_ENTRY, String.class);
+
+		final List<String> targetApplications;
+
+		if (Boolean.parseBoolean(processAllKnownAppsStr)) {
+			final Set<String> auditApplications = auditService.getAuditApplications().keySet();
+			targetApplications = auditApplications.stream().sorted().collect(Collectors.toList());
+		} else if (StringUtils.isNotEmpty(targetApplicationsStr)) {
+			targetApplications = Arrays.stream(targetApplicationsStr.split(COMMA)).map(String::trim)
+					.filter(s -> !s.isEmpty()).collect(Collectors.toList());
+		} else {
+			targetApplications = Collections.emptyList();
+		}
+
+		for (final String targetApplication : targetApplications) {
+			LOGGER.debug("Audit Applications Cleanup Job - Running cleanup of outdated data in audit application {}",
+					targetApplication);
 
 			final Period cutOffPeriod = Period.parse(cutOffPeriodStr);
 			final ZoneId zone = ZoneId.of(timezoneStr != null ? timezoneStr : DEFAULT_TIMEZONE);
@@ -117,27 +129,10 @@ public class AuditApplicationsCleanupJob implements GenericJob {
 			final ZonedDateTime cutOffDate = now.minus(cutOffPeriod);
 			final long epochMilli = cutOffDate.toInstant().toEpochMilli();
 
-			LOGGER.debug("Audit Applications Cleanup Job - Clearing all audit entries of application {} until {}", targetApplication, cutOffDate);
+			LOGGER.debug("Audit Applications Cleanup Job - Clearing all audit entries of application {} until {}",
+					targetApplication, cutOffDate);
 			auditService.clearAudit(targetApplication, null, Long.valueOf(epochMilli));
 		}
-	}
-
-	/**
-	 * Safely retrieves a List from the JobDataMap and validates element types.
-	 */
-	public static <T> List<T> getJobList(Object context, String key, Class<T> elementType) {
-		if (!(context instanceof JobExecutionContext jobContext)) {
-			return Collections.emptyList();
-		}
-
-		Object value = jobContext.getMergedJobDataMap().get(key);
-
-		if (value instanceof List<?> rawList) {
-			return rawList.stream().filter(elementType::isInstance).map(elementType::cast).collect(Collectors.toList());
-		}
-
-		LOGGER.warn("JobData value for key '{}' is not a List. Actual type: {}", key, value.getClass().getName());
-		return Collections.emptyList();
 	}
 
 }
